@@ -3,8 +3,25 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 
+# --- Configuração da página ---
 st.set_page_config(page_title="Analisador Estatístico com Classes", layout="wide")
+
+# --- Título e informações do trabalho ---
 st.title("📊 Analisador Estatístico com Classes (Interativo)")
+
+st.markdown("""
+**Trabalho de Estatística – Curso de Sistemas Embarcados – Fatec Jundiaí**  
+**Tema:** Agrupamento em Classes (média, mediana, moda bruta e de Czuber, variância, desvio padrão e coeficiente de variação)  
+
+**Integrantes:**  
+- Anderson Martinez  
+- Isaac Pereira  
+- Lucas Moraes  
+- Fabiano Matheus  
+- Victor Hugo  
+
+**Professor:** MSc. João Carlos dos Santos
+""")
 
 # --- Inicializar dataframe ---
 if "df" not in st.session_state:
