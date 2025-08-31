@@ -1,3 +1,7 @@
+# Autores: Anderson Martinez, Isaac Pereira, Lucas Moraes, Fabiano Matheus e Victor Hugo
+# Trabalho de Estatística – Curso de Sistemas Embarcados – Fatec Jundiaí
+# Analisador Estatístico com Classes – Estatísticas Descritivas
+
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -5,9 +9,7 @@ import plotly.graph_objects as go
 
 # --- Configuração da página ---
 st.set_page_config(page_title="Analisador Estatístico com Classes", layout="wide")
-
-# --- Título e informações do trabalho ---
-st.title("📊 Analisador Estatístico com Classes (Interativo)")
+st.title("📊 Analisador Estatístico com Classes (Nova Versão)")
 
 st.markdown("""
 **Trabalho de Estatística – Curso de Sistemas Embarcados – Fatec Jundiaí**  
@@ -19,138 +21,136 @@ st.markdown("""
 - Lucas Moraes  
 - Fabiano Matheus  
 - Victor Hugo  
-
-**Professor:** MSc. João Carlos dos Santos
 """)
 
-# --- Inicializar dataframe ---
-if "df" not in st.session_state:
-    st.session_state.df = pd.DataFrame({
-        "Limite Inferior": [],
-        "Limite Superior": [],
-        "Frequência (fi)": []
-    })
+# --- Entrada de dados ---
+st.subheader("📥 Insira seus dados numéricos (um por linha)")
+entrada = st.text_area("Cole os dados aqui:", height=200)
+opcoes_classes = ['auto', 3, 5, 7, 9]  # número de classes
+k_selecionado = st.selectbox("Número de classes:", opcoes_classes)
 
-df = st.session_state.df.copy()
+# --- Função para determinar tipo de moda ---
+def tipo_moda(dados):
+    from collections import Counter
+    c = Counter(dados)
+    freqs = list(c.values())
+    max_f = max(freqs)
+    qtd = freqs.count(max_f)
+    if max_f == 1: return "Amodal"
+    elif qtd == 1: return "Unimodal"
+    elif qtd == 2: return "Bimodal"
+    else: return "Multimodal"
 
-# --- Adicionar / remover classes ---
-col_add, col_remove = st.columns(2)
-with col_add:
-    if st.button("➕ Adicionar Classe"):
-        df = pd.concat([df, pd.DataFrame({"Limite Inferior":[0],"Limite Superior":[0],"Frequência (fi)":[0]})], ignore_index=True)
-with col_remove:
-    if st.button("➖ Remover Última Classe") and len(df) > 0:
-        df = df[:-1]
+# --- Função de análise agrupada ---
+def analisar(dados, k=None):
+    dados = sorted(dados)
+    n = len(dados)
+    minimo, maximo = min(dados), max(dados)
+    amplitude_total = maximo - minimo
 
-# --- Entrada de dados por linha ---
-st.subheader("📥 Insira suas classes e frequências")
-for i in range(len(df)):
-    st.markdown(f"**Classe {i+1}**")
-    col1, col2, col3 = st.columns(3)
-    li = col1.number_input("Limite Inferior", value=int(df.loc[i,"Limite Inferior"]), key=f"li_{i}")
-    ls = col2.number_input("Limite Superior", value=int(df.loc[i,"Limite Superior"]), key=f"ls_{i}")
-    fi = col3.number_input("Frequência (fi)", value=int(df.loc[i,"Frequência (fi)"]), key=f"fi_{i}")
-    df.loc[i, "Limite Inferior"] = li
-    df.loc[i, "Limite Superior"] = ls
-    df.loc[i, "Frequência (fi)"] = fi
+    if not k or k == 'auto':
+        k = int(1 + 3.322 * np.log10(n))  # Regra de Sturges
+    if k % 2 == 0: k += 1
 
-st.session_state.df = df
+    h = np.ceil(amplitude_total / k)
+    limites = [(minimo + i*h, minimo + (i+1)*h) for i in range(k)]
 
-# --- Função de cálculo ---
-def calcular_estatisticas(df):
-    if len(df) == 0 or df["Frequência (fi)"].sum() == 0:
-        return None
+    fi = [len([x for x in dados if lim[0] <= x < lim[1]]) for lim in limites]
+    fi[-1] += dados.count(maximo)
 
-    n = df["Frequência (fi)"].sum()
-    df["Ponto Médio"] = (df["Limite Inferior"] + df["Limite Superior"]) / 2
-    df["fi*xi"] = df["Frequência (fi)"] * df["Ponto Médio"]
+    xi = [(lim[0]+lim[1])/2 for lim in limites]
 
     # Média
-    media = df["fi*xi"].sum() / n
+    media = sum(f*x for f,x in zip(fi, xi))/n
 
     # Mediana
-    N2 = n / 2
-    F = 0
-    for i, row in df.iterrows():
-        if F + row["Frequência (fi)"] >= N2:
-            med_class = row
-            F_ant = F
+    fac = np.cumsum(fi)
+    n2 = n/2
+    for i, f_ac in enumerate(fac):
+        if f_ac >= n2:
+            li = limites[i][0]
+            fi_m = fi[i]
+            fac_ant = fac[i-1] if i>0 else 0
+            mediana = li + ((n2 - fac_ant)/fi_m)*h
             break
-        F += row["Frequência (fi)"]
-    h = med_class["Limite Superior"] - med_class["Limite Inferior"]
-    mediana = med_class["Limite Inferior"] + ((N2 - F_ant) / med_class["Frequência (fi)"]) * h
 
-    # Moda (Czuber)
-    modal_idx = df["Frequência (fi)"].idxmax()
-    modal = df.loc[modal_idx]
-    f1 = modal["Frequência (fi)"]
-    f0 = df["Frequência (fi)"].iloc[modal_idx - 1] if modal_idx > 0 else 0
-    f2 = df["Frequência (fi)"].iloc[modal_idx + 1] if modal_idx < len(df) - 1 else 0
-    d1 = f1 - f0
-    d2 = f1 - f2
-    moda = modal["Limite Inferior"] + (d1 / (d1 + d2)) * h if (d1 + d2) != 0 else modal["Limite Inferior"]
+    # Moda
+    i_moda = np.argmax(fi)
+    moda_bruta = xi[i_moda]
+    try:
+        d1 = fi[i_moda] - fi[i_moda-1] if i_moda>0 else fi[i_moda]
+        d2 = fi[i_moda] - fi[i_moda+1] if i_moda < len(fi)-1 else fi[i_moda]
+        moda_czuber = limites[i_moda][0] + (d1/(d1+d2))*h
+    except:
+        moda_czuber = "Não aplicável"
 
-    # Tipo de moda
-    max_fi = df["Frequência (fi)"].max()
-    modal_classes = df[df["Frequência (fi)"] == max_fi]
-    if len(modal_classes) == 1:
-        tipo_moda = "Unimodal"
-    elif len(modal_classes) == 2:
-        tipo_moda = "Bimodal"
-    else:
-        tipo_moda = "Multimodal"
+    # Variância e desvio padrão
+    variancia = sum(f*(x-media)**2 for f,x in zip(fi, xi))/(n-1)
+    desvio = np.sqrt(variancia)
+    cv = (desvio/media)*100
 
-    # Variância e Desvio Padrão
-    df["(xi - media)^2"] = (df["Ponto Médio"] - media) ** 2
-    df["fi*(xi - media)^2"] = df["Frequência (fi)"] * df["(xi - media)^2"]
-    variancia = df["fi*(xi - media)^2"].sum() / n
-    desvio_padrao = np.sqrt(variancia)
-    cv = (desvio_padrao / media) * 100
+    tipo = tipo_moda(dados)
 
-    return media, mediana, moda, tipo_moda, variancia, desvio_padrao, cv
+    return {
+        "limites": limites,
+        "fi": fi,
+        "xi": xi,
+        "media": media,
+        "mediana": mediana,
+        "moda_bruta": moda_bruta,
+        "moda_czuber": moda_czuber,
+        "variancia": variancia,
+        "desvio": desvio,
+        "cv": cv,
+        "tipo_moda": tipo
+    }
 
-# --- Botão calcular ---
-if st.button("✅ Calcular Estatísticas"):
-    stats = calcular_estatisticas(df)
-    if stats:
-        media, mediana, moda, tipo_moda, variancia, desvio_padrao, cv = stats
+# --- Botão de análise ---
+if st.button("✅ Analisar"):
+    try:
+        dados = [float(x.strip()) for x in entrada.splitlines() if x.strip()]
+        if len(dados)<5:
+            st.warning("Insira ao menos 5 dados para análise significativa.")
+        else:
+            k = None if k_selecionado=='auto' else k_selecionado
+            res = analisar(dados, k)
 
-        st.subheader("📋 Resultados Estatísticos")
-        st.write(f"Média: {media:.2f}")
-        st.write(f"Mediana: {mediana:.2f}")
-        st.write(f"Moda (Czuber): {moda:.2f}")
-        st.write(f"Tipo de Moda: {tipo_moda}")
-        st.write(f"Variância: {variancia:.2f}")
-        st.write(f"Desvio Padrão: {desvio_padrao:.2f}")
-        st.write(f"Coeficiente de Variação: {cv:.2f}%")
+            # --- Tabela ---
+            st.subheader("📋 Tabela de Classes")
+            n = len(dados)
+            fac = np.cumsum(res["fi"])
+            fri = [f/n for f in res["fi"]]
+            frac = np.cumsum(fri)
+            tabela = pd.DataFrame({
+                "Limite Inferior":[f"{lim[0]:.2f}" for lim in res["limites"]],
+                "Limite Superior":[f"{lim[1]:.2f}" for lim in res["limites"]],
+                "Frequência (fi)": res["fi"],
+                "Frequência Acumulada": fac,
+                "Ponto Médio (xi)": [f"{x:.2f}" for x in res["xi"]],
+                "Frequência Relativa (%)":[f"{f*100:.2f}" for f in fri],
+                "Frequência Relativa Acumulada (%)":[f"{f*100:.2f}" for f in frac]
+            })
+            st.dataframe(tabela)
 
-        st.subheader("📈 Gráficos Interativos")
+            # --- Resultados ---
+            st.subheader("📈 Resultados Estatísticos")
+            st.markdown(f"""
+            - **Média Agrupada:** {res['media']:.2f}  
+            - **Mediana Agrupada:** {res['mediana']:.2f}  
+            - **Moda Bruta:** {res['moda_bruta']:.2f}  
+            - **Moda de Czuber:** {res['moda_czuber'] if isinstance(res['moda_czuber'], str) else f"{res['moda_czuber']:.2f}"}  
+            - **Variância:** {res['variancia']:.2f}  
+            - **Desvio Padrão:** {res['desvio']:.2f}  
+            - **Coeficiente de Variação:** {res['cv']:.2f}%  
+            - **Tipo de Moda:** {res['tipo_moda']}
+            """)
 
-        # Histograma interativo
-        fig_hist = go.Figure()
-        fig_hist.add_trace(go.Bar(
-            x=df["Ponto Médio"],
-            y=df["Frequência (fi)"],
-            width=(df["Limite Superior"] - df["Limite Inferior"])*0.8,
-            name="Frequência",
-            marker_color="#1f77b4"
-        ))
-        fig_hist.update_layout(title="Histograma de Frequências",
-                               xaxis_title="Ponto Médio", yaxis_title="Frequência")
+            # --- Gráficos ---
+            st.subheader("📊 Gráficos")
+            fig = go.Figure()
+            fig.add_trace(go.Bar(x=res["xi"], y=res["fi"], name="Frequência"))
+            fig.update_layout(title="Histograma de Frequências", xaxis_title="Ponto Médio", yaxis_title="Frequência")
+            st.plotly_chart(fig, use_container_width=True)
 
-        # Polígono de frequência interativo
-        fig_poly = go.Figure()
-        fig_poly.add_trace(go.Scatter(
-            x=df["Ponto Médio"],
-            y=df["Frequência (fi)"],
-            mode='lines+markers',
-            name="Frequência",
-            line=dict(color="#ff7f0e", width=2)
-        ))
-        fig_poly.update_layout(title="Polígono de Frequência",
-                               xaxis_title="Ponto Médio", yaxis_title="Frequência")
-
-        st.plotly_chart(fig_hist, use_container_width=True)
-        st.plotly_chart(fig_poly, use_container_width=True)
-    else:
-        st.warning("Insira pelo menos uma classe com frequência maior que 0.")
+    except Exception as e:
+        st.error(f"Erro ao processar os dados: {e}")
