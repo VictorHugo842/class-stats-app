@@ -1,45 +1,51 @@
 # 📊 Analisador Estatístico com Classes
 
-Este é um **app interativo de Estatística** desenvolvido com **Streamlit** para análise de dados agrupados em classes.  
-Permite calcular **média, mediana, moda (Czuber), tipo de moda, variância, desvio padrão e coeficiente de variação**, além de gerar **gráficos interativos**.
+Bem-vindo ao Analisador Estatístico com Classes, uma ferramenta interativa desenvolvida em Python usando a biblioteca Streamlit. Este projeto foi criado para o trabalho da disciplina de Estatística do curso de Gestão da Tecnologia da Informação da FATEC Jundiaí. Ele permite calcular e visualizar medidas estatísticas de dados agrupados em classes de forma simples e intuitiva. 📈
 
----
+## 🌟 Recursos
 
-## Funcionalidades
+O aplicativo oferece funcionalidades para analisar dados agrupados, incluindo:
 
-- Adicionar ou remover classes dinamicamente  
-- Inserir limites de classe e frequências  
-- Calcular estatísticas descritivas:
-  - Média  
-  - Mediana  
-  - Moda (Czuber)  
-  - Tipo de moda (unimodal, bimodal, multimodal)  
-  - Variância  
-  - Desvio padrão  
-  - Coeficiente de variação  
-- Gráficos interativos com Plotly:  
-  - Histograma  
-  - Polígono de frequência  
+**Medidas de Tendência Central:** Calcule a média, mediana e moda (tanto bruta quanto pela fórmula de Czuber) para seus dados.
 
----
+**Medidas de Dispersão:** Obtenha a variância, o desvio padrão e o coeficiente de variação para entender a dispersão dos dados.
 
-## Tecnologias
+**Classificação da Distribuição:** Identifique o tipo de moda da sua distribuição (Unimodal, Bimodal ou Multimodal) com uma visualização clara.
 
-- Python 3.13+  
-- [Streamlit](https://streamlit.io/)  
-- Pandas  
-- NumPy  
-- Matplotlib (opcional)  
-- Plotly  
+**Tabela de Classes Interativa:** Veja uma tabela completa com os limites das classes, frequências, pontos médios e cálculos auxiliares.
 
----
+**Visualizações Dinâmicas:** Explore seus dados com um histograma e um polígono de frequência interativos, gerados com a biblioteca Plotly.
 
-## Como usar
+## 🛠️ Como Usar
 
-### Localmente
+Para utilizar a ferramenta, basta seguir estes passos:
 
-1. Clone o repositório:
+1. **Clone o repositório:** Baixe o código-fonte para sua máquina local.
 
-```bash
-git clone https://github.com/SEU_USUARIO/app-estatistica.git
-cd app-estatistica
+2. **Instale as dependências:** Certifique-se de ter o Python instalado e as bibliotecas necessárias. Você pode instalá-las com o seguinte comando:
+
+\`\`\`bash
+pip install streamlit numpy pandas plotly
+\`\`\`
+
+3. **Execute o aplicativo:** Abra o terminal na pasta do projeto e execute o comando:
+
+\`\`\`bash
+streamlit run seu_arquivo.py
+\`\`\`
+
+4. **Acesse no navegador:** O Streamlit iniciará um servidor local e abrirá o aplicativo em seu navegador web.
+
+5. **Insira seus dados:** No aplicativo, configure o limite mínimo (L0), a amplitude da classe (h) e o número de classes (k). Em seguida, digite as frequências de cada classe.
+
+6. **Calcule:** Clique no botão "Calcular Estatísticas" para visualizar os resultados, a tabela e os gráficos.
+
+## 👨‍💻 Integrantes do Grupo
+
+- Anderson Martinez
+- Isaac Pereira
+- Lucas Moraes
+- Fabiano Matheus
+- Victor Hugo
+
+**Professor:** João Carlos dos Santos
