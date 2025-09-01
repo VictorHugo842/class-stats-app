@@ -38,7 +38,7 @@ O aplicativo oferece funcionalidades para analisar dados agrupados, incluindo:
 ## Como Usar Localmente
 
 1. Atualize as dependências com:  
-   `pip install --upgrade streamlit numpy pandas plotly`
+   `pip install -r requirements.txt`
 
 2. Execute o aplicativo com:  
    `streamlit run seu_arquivo.py`
