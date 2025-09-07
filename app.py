@@ -43,6 +43,7 @@ if modo == "Classes":
         "Frequência (fi)": [3,5,2] + [0]*(k-3)
     })
     df_classes = st.data_editor(df_classes, num_rows="dynamic", key="editor_classes")
+    df_classes = df_classes.fillna(0)  # resolve None
     frequencias = df_classes["Frequência (fi)"].tolist()
     limites_inferiores = df_classes["Limite Inferior"].tolist()
     limites_superiores = df_classes["Limite Superior"].tolist()
@@ -74,6 +75,7 @@ else:
             "Frequência (fi)": [1,1,1,1,1]
         })
         df_discreto = st.data_editor(df_discreto, num_rows="dynamic", key="editor_discreto")
+        df_discreto = df_discreto.fillna(0)  # resolve None
         valores = df_discreto["Xi"].tolist()
         frequencias = df_discreto["Frequência (fi)"].tolist()
 
@@ -90,10 +92,29 @@ opcoes_medidas = ["Média","Mediana","Moda","Moda Czuber","Variância","Desvio P
 medidas_selecionadas = st.multiselect("Selecione as medidas que deseja calcular:", opcoes_medidas, default=opcoes_medidas)
 
 # ---------------- BOTÃO CALCULAR ----------------
-st.divider()
-col_btn = st.columns([1,2,1])
-with col_btn[1]:
-    calcular = st.button("Calcular Estatísticas")
+calcular = st.button("Calcular Estatísticas")
+
+# CSS para centralizar e estilizar
+st.markdown("""
+    <style>
+    div.stButton > button:first-child {
+        display: block;
+        margin: 1rem auto;  /* centraliza horizontalmente */
+        padding: 0.6rem 1.5rem;
+        font-size: 1rem;
+        background-color: #667eea;
+        color: white;
+        border-radius: 8px;
+        border: none;
+        transition: background-color 0.3s;
+    }
+    div.stButton > button:first-child:hover {
+        background-color: #764ba2;
+        cursor: pointer;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 
 if calcular:
     df = pd.DataFrame({
