@@ -20,6 +20,36 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+# ---------------- UNIDADE DOS DADOS ----------------
+st.markdown("### Unidade dos Dados")
+unidade = st.selectbox(
+    "Selecione a unidade:", 
+    ["Nenhuma", "Temperatura (°C)", "Valor Monetário (R$)", "Volume de Chuva (mm)", "Tempo (h)"], 
+    index=0
+)
+
+# Mapeamento de ícones para unidades
+unidade_icones = {
+    "Nenhuma": "",
+    "Temperatura (°C)": "°C",
+    "Valor Monetário (R$)": "R$",
+    "Volume de Chuva (mm)": "mm",
+    "Tempo (h)": "h"
+}
+# Função para formatar valores seguindo convenção
+def format_valor_simbolo(valor, medida, unidade):
+    icone = unidade_icones.get(unidade, "")
+    if medida == "Coef. de Variação":
+        return f"{valor:.2f}%"
+    elif medida == "Variância" and icone:
+        return f"{valor:.2f} {icone}²"
+    elif unidade == "Valor Monetário (R$)":
+        return f"{icone} {valor:.2f}"
+    elif icone:
+        return f"{valor:.2f}{icone}"
+    else:
+        return f"{valor:.2f}"
+
 # ---------------- MODO DE AGRUPAMENTO ----------------
 st.markdown("### Escolha o Tipo de Agrupamento")
 modo = st.radio("Selecione o tipo de agrupamento:", ["Discreto (Xi)", "Classes"], index=1)
@@ -43,7 +73,7 @@ if modo == "Classes":
         "Frequência (fi)": [3,5,2] + [0]*(k-3)
     })
     df_classes = st.data_editor(df_classes, num_rows="dynamic", key="editor_classes")
-    df_classes = df_classes.fillna(0)  # resolve None
+    df_classes = df_classes.fillna(0)
     frequencias = df_classes["Frequência (fi)"].tolist()
     limites_inferiores = df_classes["Limite Inferior"].tolist()
     limites_superiores = df_classes["Limite Superior"].tolist()
@@ -75,7 +105,7 @@ else:
             "Frequência (fi)": [1,1,1,1,1]
         })
         df_discreto = st.data_editor(df_discreto, num_rows="dynamic", key="editor_discreto")
-        df_discreto = df_discreto.fillna(0)  # resolve None
+        df_discreto = df_discreto.fillna(0)
         valores = df_discreto["Xi"].tolist()
         frequencias = df_discreto["Frequência (fi)"].tolist()
 
@@ -83,7 +113,7 @@ else:
     limites_superiores = valores
     pontos_medios = valores
     k = len(valores)
-    h = 0  # Para mediana e moda Czuber discreto
+    h = 0
 
 # ---------------- SELEÇÃO DE MEDIDAS ----------------
 st.divider()
@@ -99,7 +129,7 @@ st.markdown("""
     <style>
     div.stButton > button:first-child {
         display: block;
-        margin: 1rem auto;  /* centraliza horizontalmente */
+        margin: 1rem auto;
         padding: 0.6rem 1.5rem;
         font-size: 1rem;
         background-color: #667eea;
@@ -115,7 +145,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-
+# ---------------- CÁLCULO ----------------
 if calcular:
     df = pd.DataFrame({
         "Limite Inferior": limites_inferiores,
@@ -163,30 +193,24 @@ if calcular:
     # ---------------- EXIBIÇÃO ----------------
     st.divider()
     st.markdown("### Tabela de Classes / Valores")
-    st.dataframe(df.round(4), use_container_width=True)
+    st.dataframe(df, use_container_width=True)
 
     st.divider()
     st.markdown("### Resultados Estatísticos Selecionados")
-    col_count = len(medidas_selecionadas)
-    cols = st.columns(col_count)
+    cols = st.columns(len(medidas_selecionadas))
     for idx, medida in enumerate(medidas_selecionadas):
-        valor = None
-        if medida=="Média":
-            valor = f"{media:.2f}"
-        elif medida=="Mediana":
-            valor = f"{mediana:.2f}"
-        elif medida=="Moda":
-            valor = f"{moda_bruta:.2f}"
-        elif medida=="Moda Czuber":
-            valor = f"{moda_czuber:.2f}"
-        elif medida=="Variância":
-            valor = f"{variancia:.2f}"
-        elif medida=="Desvio Padrão":
-            valor = f"{desvio_padrao:.2f}"
-        elif medida=="Coef. de Variação":
-            valor = f"{coef_var:.2f}%"
-        if valor is not None:
-            cols[idx].metric(medida, valor)
+        valor = format_valor_simbolo(
+            media if medida=="Média" else
+            mediana if medida=="Mediana" else
+            moda_bruta if medida=="Moda" else
+            moda_czuber if medida=="Moda Czuber" else
+            variancia if medida=="Variância" else
+            desvio_padrao if medida=="Desvio Padrão" else
+            coef_var,
+            medida,
+            unidade
+        )
+        cols[idx].metric(medida, valor)
 
     # ---------------- CARD SEPARADO PARA CLASSIFICAÇÃO ----------------
     st.divider()
@@ -202,6 +226,8 @@ if calcular:
     st.divider()
     st.markdown("### Visualizações Interativas")
     tab1, tab2 = st.tabs(["Histograma", "Polígono de Frequência"])
+    xaxis_title = "Ponto Médio" + (f" ({unidade_icones[unidade]})" if unidade!="Nenhuma" and unidade!="Valor Monetário (R$)" else "")
+
     with tab1:
         fig_hist = go.Figure()
         fig_hist.add_trace(go.Bar(
@@ -211,7 +237,7 @@ if calcular:
             hovertemplate="<b>Ponto Médio:</b> %{x}<br><b>Frequência:</b> %{y}<extra></extra>"
         ))
         fig_hist.update_layout(title={'text': "Histograma de Frequências",'x':0.5,'xanchor':'center','font':{'size':20}},
-                               xaxis_title="Ponto Médio", yaxis_title="Frequência",
+                               xaxis_title=xaxis_title, yaxis_title="Frequência",
                                plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
                                font=dict(size=12), showlegend=False,
                                xaxis=dict(showgrid=True,gridwidth=1,gridcolor='lightgray'),
@@ -227,7 +253,7 @@ if calcular:
             hovertemplate="<b>Ponto Médio:</b> %{x}<br><b>Frequência:</b> %{y}<extra></extra>"
         ))
         fig_poly.update_layout(title={'text': "Polígono de Frequência",'x':0.5,'xanchor':'center','font':{'size':20}},
-                               xaxis_title="Ponto Médio", yaxis_title="Frequência",
+                               xaxis_title=xaxis_title, yaxis_title="Frequência",
                                plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
                                font=dict(size=12), showlegend=False,
                                xaxis=dict(showgrid=True,gridwidth=1,gridcolor='lightgray'),
