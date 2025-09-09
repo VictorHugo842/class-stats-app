@@ -30,7 +30,7 @@ unidade = st.selectbox(
     index=0
 )
 
-# Mapeamento de ícones para unidades
+# Ícones de unidade
 unidade_icones = {
     "Nenhuma": "",
     "Temperatura (°C)": "°C",
@@ -38,7 +38,7 @@ unidade_icones = {
     "Volume de Chuva (mm)": "mm",
     "Tempo (h)": "h"
 }
-# Função para formatar valores seguindo convenção
+
 def format_valor_simbolo(valor, medida, unidade):
     icone = unidade_icones.get(unidade, "")
     if medida == "Coef. de Variação":
@@ -61,17 +61,17 @@ if modo == "Classes":
     st.markdown("### Configurações Iniciais de Classes")
     col1, col2, col3 = st.columns(3)
     with col1:
-        L0 = st.number_input("Limite Mínimo (L0):", value=10, label_visibility="collapsed")
+        LI = st.number_input("LI (Limite Inferior):", value=10)
     with col2:
-        h = st.number_input("Amplitude da Classe (h):", value=5, label_visibility="collapsed")
+        H = st.number_input("H (Amplitude da Classe):", value=5)
     with col3:
-        k = st.selectbox("Número de Classes (k):", [3,5,7], index=0, label_visibility="collapsed")
+        k = st.selectbox("Número de Classes:", [3,5,7], index=0)
     
     st.divider()
     st.markdown("### Frequências das Classes")
     df_classes = pd.DataFrame({
-        "Limite Inferior": [L0 + i*h for i in range(k)],
-        "Limite Superior": [L0 + (i+1)*h for i in range(k)],
+        "Limite Inferior": [LI + i*H for i in range(k)],
+        "Limite Superior": [LI + (i+1)*H for i in range(k)],
         "Frequência (fi)": [3,5,2] + [0]*(k-3)
     })
     df_classes = st.data_editor(df_classes, num_rows="dynamic", key="editor_classes")
@@ -80,35 +80,36 @@ if modo == "Classes":
     limites_inferiores = df_classes["Limite Inferior"].tolist()
     limites_superiores = df_classes["Limite Superior"].tolist()
     pontos_medios = [(li+ls)/2 for li, ls in zip(limites_inferiores, limites_superiores)]
+    h = H
 
 else:
     st.markdown("### Valores Discretos (Xi)")
     entrada_discreta = st.radio("Como deseja informar os dados Xi?", ["Inserir individualmente", "Usar tabela"], index=0)
     
     if entrada_discreta == "Inserir individualmente":
-        n_valores = st.number_input("Número de valores Xi:", min_value=2, value=5, step=1)
+        n_valores = st.number_input("Número de valores:", min_value=2, value=5, step=1)
         valores_padrao = [10,12,15,17,20]
         valores = []
         cols = st.columns(n_valores)
         for i in range(n_valores):
             with cols[i]:
-                val = st.number_input(f"Xi {i+1}:", value=(valores_padrao[i] if i<len(valores_padrao) else 0), key=f"xi_{i}", label_visibility="collapsed")
+                val = st.number_input(f"{i+1}º valor:", value=(valores_padrao[i] if i<len(valores_padrao) else 0), key=f"xi_{i}")
                 valores.append(val)
-        st.markdown("### Frequências (fi) dos valores Xi")
+        st.markdown("### Frequências (fi)")
         frequencias = []
         cols = st.columns(n_valores)
         for i in range(n_valores):
             with cols[i]:
-                fi = st.number_input(f"fi {i+1}:", min_value=0, value=1, key=f"fi_xi_{i}", label_visibility="collapsed")
+                fi = st.number_input(f"{i+1}º fi:", min_value=0, value=1, key=f"fi_xi_{i}")
                 frequencias.append(fi)
     else:
         df_discreto = pd.DataFrame({
-            "Xi": [10,12,15,17,20],
+            "Valor": [10,12,15,17,20],
             "Frequência (fi)": [1,1,1,1,1]
         })
         df_discreto = st.data_editor(df_discreto, num_rows="dynamic", key="editor_discreto")
         df_discreto = df_discreto.fillna(0)
-        valores = df_discreto["Xi"].tolist()
+        valores = df_discreto["Valor"].tolist()
         frequencias = df_discreto["Frequência (fi)"].tolist()
 
     limites_inferiores = valores
@@ -120,34 +121,16 @@ else:
 # ---------------- SELEÇÃO DE MEDIDAS ----------------
 st.divider()
 st.markdown("### Medidas Estatísticas Desejadas")
-opcoes_medidas = ["Média","Mediana","Moda","Moda Czuber","Variância","Desvio Padrão","Coef. de Variação"]
-medidas_selecionadas = st.multiselect("Selecione as medidas que deseja calcular:", opcoes_medidas, default=opcoes_medidas)
+if modo == "Discreto (Xi)":
+    medidas_opcoes = ["Média","Mediana","Moda","Variância","Desvio Padrão","Coef. de Variação"]
+else:
+    medidas_opcoes = ["Média","Mediana","Moda Bruta","Moda Czuber","Variância","Desvio Padrão","Coef. de Variação"]
+
+medidas_selecionadas = st.multiselect("Selecione as medidas que deseja calcular:", medidas_opcoes, default=medidas_opcoes)
 
 # ---------------- BOTÃO CALCULAR ----------------
 calcular = st.button("Calcular Estatísticas")
 
-# CSS para centralizar e estilizar
-st.markdown("""
-    <style>
-    div.stButton > button:first-child {
-        display: block;
-        margin: 1rem auto;
-        padding: 0.6rem 1.5rem;
-        font-size: 1rem;
-        background-color: #667eea;
-        color: white;
-        border-radius: 8px;
-        border: none;
-        transition: background-color 0.3s;
-    }
-    div.stButton > button:first-child:hover {
-        background-color: #764ba2;
-        cursor: pointer;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
-# ---------------- CÁLCULO ----------------
 if calcular:
     df = pd.DataFrame({
         "Limite Inferior": limites_inferiores,
@@ -179,6 +162,7 @@ if calcular:
     f2 = frequencias[i_moda+1] if i_moda<k-1 else 0
     moda_czuber = limites_inferiores[i_moda] + ((f1-f0)/((f1-f0)+(f1-f2)))*h if (f1-f0)+(f1-f2)!=0 and modo=="Classes" else limites_inferiores[i_moda]
     moda_bruta = pontos_medios[i_moda]
+    moda = pontos_medios[i_moda]
 
     # Variância e desvio padrão
     df["(xi-media)^2"] = (df["Ponto Médio (xi)"]-media)**2
@@ -187,16 +171,19 @@ if calcular:
     desvio_padrao = np.sqrt(variancia)
     coef_var = (desvio_padrao/media)*100 if media!=0 else 0
 
-    # Tipo de moda
+    # ---------------- TIPO DE MODA AJUSTADO ----------------
     max_fi = max(frequencias)
-    qtd_modas = frequencias.count(max_fi)
-    tipo_moda = "Unimodal" if qtd_modas==1 else "Bimodal" if qtd_modas==2 else "Multimodal"
+    # Somente consideramos frequências >0
+    indices_modas = [i for i,f in enumerate(frequencias) if f==max_fi and f>0]
+    qtd_modas = len(indices_modas)
+    if qtd_modas == 1:
+        tipo_moda = "Unimodal"
+    elif qtd_modas == 2:
+        tipo_moda = "Bimodal"
+    else:
+        tipo_moda = "Trimodal"
 
     # ---------------- EXIBIÇÃO ----------------
-    st.divider()
-    st.markdown("### Tabela de Classes / Valores")
-    st.dataframe(df, use_container_width=True)
-
     st.divider()
     st.markdown("### Resultados Estatísticos Selecionados")
     cols = st.columns(len(medidas_selecionadas))
@@ -204,7 +191,8 @@ if calcular:
         valor = format_valor_simbolo(
             media if medida=="Média" else
             mediana if medida=="Mediana" else
-            moda_bruta if medida=="Moda" else
+            moda if medida=="Moda" else
+            moda_bruta if medida=="Moda Bruta" else
             moda_czuber if medida=="Moda Czuber" else
             variancia if medida=="Variância" else
             desvio_padrao if medida=="Desvio Padrão" else
@@ -214,15 +202,15 @@ if calcular:
         )
         cols[idx].metric(medida, valor)
 
-    # ---------------- CARD SEPARADO PARA CLASSIFICAÇÃO ----------------
     st.divider()
-    st.markdown("### Classificação da Distribuição")
-    cor_moda = "#28a745" if tipo_moda=="Unimodal" else "#ffc107" if tipo_moda=="Bimodal" else "#dc3545"
-    st.markdown(f"""
-    <div style="background-color: {cor_moda}20; padding: 1rem; border-radius: 8px; border-left: 4px solid {cor_moda}; text-align:center;">
-        <h5 style="color: {cor_moda}; margin: 0;">Tipo de Distribuição: {tipo_moda}</h5>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(f"**Tipo de Distribuição:** {tipo_moda}")
+    
+    # cor_moda = "#28a745" if tipo_moda=="Unimodal" else "#ffc107" if tipo_moda=="Bimodal" else "#dc3545"
+    # st.markdown(f"""
+    # <div style="background-color: {cor_moda}20; padding: 1rem; border-radius: 8px; border-left: 4px solid {cor_moda}; text-align:center;">
+    #     <h5 style="color: {cor_moda}; margin: 0;">Tipo de Distribuição: {tipo_moda}</h5>
+    # </div>
+    # """, unsafe_allow_html=True)
 
     # ---------------- VISUALIZAÇÕES ----------------
     st.divider()
