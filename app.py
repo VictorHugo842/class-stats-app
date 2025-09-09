@@ -107,7 +107,7 @@ else:
             "Valor": [10,12,15,17,20],
              "Frequência (fi)": [3, 5, 5, 5, 2]
         })
-        df_discreto = st.data_editor(df_discreto, num_rows="dynamic", key="editor_discreto")
+        df_discreto = st.data_editor(df_discreto, num_rows="dynamic", key="editor_discreto_v3")
         df_discreto = df_discreto.fillna(0)
         valores = df_discreto["Valor"].tolist()
         frequencias = df_discreto["Frequência (fi)"].tolist()
@@ -206,11 +206,11 @@ if calcular:
     st.markdown(f"**Tipo de Distribuição:** {tipo_moda}")
 
     cor_moda = "#28a745" if tipo_moda=="Unimodal" else "#28a745" if tipo_moda=="Bimodal" else "#28a745"
-    st.markdown(f"""
-    <div style="background-color: {cor_moda}20; padding: 1rem; border-radius: 8px; border-left: 4px solid {cor_moda}; text-align:center;">
-        <h5 style="color: {cor_moda}; margin: 0;">{tipo_moda}</h5>
-    </div>
-    """, unsafe_allow_html=True)
+    # st.markdown(f"""
+    # <div style="background-color: {cor_moda}20; padding: 1rem; border-radius: 8px; border-left: 4px solid {cor_moda}; text-align:center;">
+    #     <h5 style="color: {cor_moda}; margin: 0;">{tipo_moda}</h5>
+    # </div>
+    # """, unsafe_allow_html=True)
 
     # ---------------- VISUALIZAÇÕES ----------------
     st.divider()
