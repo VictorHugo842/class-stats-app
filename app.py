@@ -105,7 +105,7 @@ else:
     else:
         df_discreto = pd.DataFrame({
             "Valor": [10,12,15,17,20],
-            "Frequência (fi)": [1,1,1,1,1]
+             "Frequência (fi)": [3, 5, 5, 5, 2]
         })
         df_discreto = st.data_editor(df_discreto, num_rows="dynamic", key="editor_discreto")
         df_discreto = df_discreto.fillna(0)
