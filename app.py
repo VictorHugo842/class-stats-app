@@ -13,7 +13,6 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-
 st.markdown("""
 <div style="background-color: #f8f9fa; padding: 1.5rem; border-radius: 10px; border-left: 5px solid #667eea; margin-bottom: 2rem;">
     <h4 style="color: #2c3e50; margin-top: 0; font-weight: 600;">Trabalho de Estatística – Curso de Gestão da Tecnologia da Informação – Fatec Jundiaí</h4>
@@ -105,7 +104,7 @@ else:
     else:
         df_discreto = pd.DataFrame({
             "Valor": [10,12,15,17,20],
-             "Frequência (fi)": [3, 5, 5, 5, 2]
+            "Frequência (fi)": [3, 5, 5, 5, 2]
         })
         df_discreto = st.data_editor(df_discreto, num_rows="dynamic", key="editor_discreto_v3")
         df_discreto = df_discreto.fillna(0)
@@ -155,14 +154,31 @@ if calcular:
             mediana = Li + ((N2-F_ant)/fi_class)*h if fi_class>0 else Li
             break
 
-    # Moda
-    i_moda = np.argmax(frequencias)
-    f1 = frequencias[i_moda]
-    f0 = frequencias[i_moda-1] if i_moda>0 else 0
-    f2 = frequencias[i_moda+1] if i_moda<k-1 else 0
-    moda_czuber = limites_inferiores[i_moda] + ((f1-f0)/((f1-f0)+(f1-f2)))*h if (f1-f0)+(f1-f2)!=0 and modo=="Classes" else limites_inferiores[i_moda]
-    moda_bruta = pontos_medios[i_moda]
-    moda = pontos_medios[i_moda]
+    # ---------------- MODA ----------------
+    max_fi = max(frequencias)
+    indices_modas = [i for i,f in enumerate(frequencias) if f==max_fi and f>0]
+
+    # Moda genérica / Bruta
+    modas = [pontos_medios[i] for i in indices_modas][:3]  # Limita a 3
+    modas_brutas = modas.copy()
+    
+    # Moda Czuber (para Classes)
+    modas_czuber = []
+    for i in indices_modas[:3]:  # Limita a 3
+        f1 = frequencias[i]
+        f0 = frequencias[i-1] if i>0 else 0
+        f2 = frequencias[i+1] if i<k-1 else 0
+        moda_cz = limites_inferiores[i] + ((f1-f0)/((f1-f0)+(f1-f2)))*h if (f1-f0)+(f1-f2)!=0 and modo=="Classes" else limites_inferiores[i]
+        modas_czuber.append(moda_cz)
+
+    # Determina tipo da distribuição
+    qtd_modas = len(modas)
+    if qtd_modas == 1:
+        tipo_moda = "Unimodal"
+    elif qtd_modas == 2:
+        tipo_moda = "Bimodal"
+    else:
+        tipo_moda = "Trimodal"
 
     # Variância e desvio padrão
     df["(xi-media)^2"] = (df["Ponto Médio (xi)"]-media)**2
@@ -171,46 +187,35 @@ if calcular:
     desvio_padrao = np.sqrt(variancia)
     coef_var = (desvio_padrao/media)*100 if media!=0 else 0
 
-    # ---------------- TIPO DE MODA AJUSTADO ----------------
-    max_fi = max(frequencias)
-    # Somente consideramos frequências >0
-    indices_modas = [i for i,f in enumerate(frequencias) if f==max_fi and f>0]
-    qtd_modas = len(indices_modas)
-    if qtd_modas == 1:
-        tipo_moda = "Unimodal"
-    elif qtd_modas == 2:
-        tipo_moda = "Bimodal"
-    else:
-        tipo_moda = "Trimodal"
-
     # ---------------- EXIBIÇÃO ----------------
     st.divider()
     st.markdown("### Resultados Estatísticos Selecionados")
-    cols = st.columns(len(medidas_selecionadas))
-    for idx, medida in enumerate(medidas_selecionadas):
-        valor = format_valor_simbolo(
-            media if medida=="Média" else
-            mediana if medida=="Mediana" else
-            moda if medida=="Moda" else
-            moda_bruta if medida=="Moda Bruta" else
-            moda_czuber if medida=="Moda Czuber" else
-            variancia if medida=="Variância" else
-            desvio_padrao if medida=="Desvio Padrão" else
-            coef_var,
-            medida,
-            unidade
-        )
-        cols[idx].metric(medida, valor)
 
-    st.divider()
-    st.markdown(f"**Tipo de Distribuição:** {tipo_moda}")
+    for medida in medidas_selecionadas:
+        # Define os valores a mostrar
+        if medida == "Moda":
+            valores = modas
+        elif medida == "Moda Bruta":
+            valores = modas_brutas
+        elif medida == "Moda Czuber":
+            valores = modas_czuber
+        elif medida == "Média":
+            valores = [media]
+        elif medida == "Mediana":
+            valores = [mediana]
+        elif medida == "Variância":
+            valores = [variancia]
+        elif medida == "Desvio Padrão":
+            valores = [desvio_padrao]
+        elif medida == "Coef. de Variação":
+            valores = [coef_var]
 
-    cor_moda = "#28a745" if tipo_moda=="Unimodal" else "#28a745" if tipo_moda=="Bimodal" else "#28a745"
-    # st.markdown(f"""
-    # <div style="background-color: {cor_moda}20; padding: 1rem; border-radius: 8px; border-left: 4px solid {cor_moda}; text-align:center;">
-    #     <h5 style="color: {cor_moda}; margin: 0;">{tipo_moda}</h5>
-    # </div>
-    # """, unsafe_allow_html=True)
+        # Exibe os valores lado a lado, sem título redundante
+        cols = st.columns(len(valores))
+        for idx, val in enumerate(valores):
+            display_val = format_valor_simbolo(val, medida, unidade)
+            cols[idx].metric(f"{medida}" + (f" #{idx+1}" if len(valores) > 1 else ""), display_val)
+
 
     # ---------------- VISUALIZAÇÕES ----------------
     st.divider()
@@ -220,10 +225,11 @@ if calcular:
 
     with tab1:
         fig_hist = go.Figure()
+        cores_barras = ["#28a745" if i in indices_modas[:3] else "#667eea" for i in range(k)]
         fig_hist.add_trace(go.Bar(
             x=pontos_medios, y=frequencias, 
             width=[h*0.8]*k if modo=="Classes" else [0.8]*k,
-            marker_color="#667eea", marker_line_color="#4c63d2", marker_line_width=2,
+            marker_color=cores_barras, marker_line_color="#4c63d2", marker_line_width=2,
             hovertemplate="<b>Ponto Médio:</b> %{x}<br><b>Frequência:</b> %{y}<extra></extra>"
         ))
         fig_hist.update_layout(title={'text': "Histograma de Frequências",'x':0.5,'xanchor':'center','font':{'size':20}},
