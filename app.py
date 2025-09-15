@@ -8,7 +8,7 @@ st.set_page_config(page_title="Analisador Estatístico", layout="wide", initial_
 # ---------------- HEADER ----------------
 st.markdown("""
 <div style="background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); padding: 2rem; border-radius: 10px; margin-bottom: 2rem; text-align:center;">
-    <h1 style="color: white; margin: 0; font-size: 2.5rem;">📊 Calculadora Estatística</h1>
+    <h1 style="color: white; margin: 0; font-size: 2.5rem;">📊 Analisador Estatísticoa</h1>
     <p style="color: #e0e0e0; margin-top: 0.5rem; font-size: 1.1rem;">App interativo de medidas estatísticas – Fatec Jundiaí</p>
 </div>
 """, unsafe_allow_html=True)
