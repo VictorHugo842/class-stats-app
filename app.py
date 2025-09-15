@@ -8,7 +8,7 @@ st.set_page_config(page_title="Analisador Estatístico", layout="wide", initial_
 # ---------------- HEADER ----------------
 st.markdown("""
 <div style="background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); padding: 2rem; border-radius: 10px; margin-bottom: 2rem; text-align:center;">
-    <h1 style="color: white; margin: 0; font-size: 2.5rem;">📊 Analisador Estatísticoa</h1>
+    <h1 style="color: white; margin: 0; font-size: 2.5rem;">📊 Analisador Estatístico</h1>
     <p style="color: #e0e0e0; margin-top: 0.5rem; font-size: 1.1rem;">App interativo de medidas estatísticas – Fatec Jundiaí</p>
 </div>
 """, unsafe_allow_html=True)
@@ -156,29 +156,33 @@ if calcular:
 
     # ---------------- MODA ----------------
     max_fi = max(frequencias)
-    indices_modas = [i for i,f in enumerate(frequencias) if f==max_fi and f>0]
+    indices_modas = [i for i,f in enumerate(frequencias)]
 
-    # Moda genérica / Bruta
-    modas = [pontos_medios[i] for i in indices_modas][:3]  # Limita a 3
-    modas_brutas = modas.copy()
-    
-    # Moda Czuber (para Classes)
-    modas_czuber = []
-    for i in indices_modas[:3]:  # Limita a 3
-        f1 = frequencias[i]
-        f0 = frequencias[i-1] if i>0 else 0
-        f2 = frequencias[i+1] if i<k-1 else 0
-        moda_cz = limites_inferiores[i] + ((f1-f0)/((f1-f0)+(f1-f2)))*h if (f1-f0)+(f1-f2)!=0 and modo=="Classes" else limites_inferiores[i]
-        modas_czuber.append(moda_cz)
-
-    # Determina tipo da distribuição
-    qtd_modas = len(modas)
-    if qtd_modas == 1:
-        tipo_moda = "Unimodal"
-    elif qtd_modas == 2:
-        tipo_moda = "Bimodal"
+    # Verifica amodalidade
+    if max_fi == 0 or all(f==frequencias[0] for f in frequencias):
+        modas = ["∄"]
+        modas_brutas = ["∄"]
+        modas_czuber = ["∄"]
     else:
-        tipo_moda = "Trimodal"
+        # Moda genérica / Bruta
+        indices_modas = [i for i,f in enumerate(frequencias) if f==max_fi]
+        modas = [pontos_medios[i] for i in indices_modas][:3]
+        modas_brutas = modas.copy()
+
+        # Moda Czuber
+        modas_czuber = []
+        if modo == "Classes":
+            for i in indices_modas[:3]:
+                f1 = frequencias[i]
+                f0 = frequencias[i-1] if i>0 else 0
+                f2 = frequencias[i+1] if i<k-1 else 0
+                if (f1-f0)+(f1-f2) != 0:
+                    moda_cz = limites_inferiores[i] + ((f1-f0)/((f1-f0)+(f1-f2)))*h
+                else:
+                    moda_cz = "∄"
+                modas_czuber.append(moda_cz)
+        else:
+            modas_czuber = modas.copy()
 
     # Variância e desvio padrão
     df["(xi-media)^2"] = (df["Ponto Médio (xi)"]-media)**2
@@ -190,9 +194,7 @@ if calcular:
     # ---------------- EXIBIÇÃO ----------------
     st.divider()
     st.markdown("### Resultados Estatísticos Selecionados")
-
     for medida in medidas_selecionadas:
-        # Define os valores a mostrar
         if medida == "Moda":
             valores = modas
         elif medida == "Moda Bruta":
@@ -210,12 +212,10 @@ if calcular:
         elif medida == "Coef. de Variação":
             valores = [coef_var]
 
-        # Exibe os valores lado a lado, sem título redundante
         cols = st.columns(len(valores))
         for idx, val in enumerate(valores):
-            display_val = format_valor_simbolo(val, medida, unidade)
+            display_val = val if isinstance(val, str) else format_valor_simbolo(val, medida, unidade)
             cols[idx].metric(f"{medida}" + (f" #{idx+1}" if len(valores) > 1 else ""), display_val)
-
 
     # ---------------- VISUALIZAÇÕES ----------------
     st.divider()
