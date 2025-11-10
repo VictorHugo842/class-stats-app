@@ -7,16 +7,20 @@ from scipy.optimize import curve_fit
 
 st.set_page_config(page_title="Aplicativo Estatístico", layout="wide", initial_sidebar_state="collapsed")
 
+# Inicializar session_state
+if 'resultados_calculados' not in st.session_state:
+    st.session_state.resultados_calculados = {}
+
 # ---------------- HEADER ----------------
 st.markdown("""
-<div style="background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); padding: 2rem; border-radius: 10px; margin-bottom: 2rem; text-align:center;">
+<div style="background: linear-gradient(90deg, #11998e 0%, #38ef7d 100%); padding: 2rem; border-radius: 10px; margin-bottom: 2rem; text-align:center;">
     <h1 style="color: white; margin: 0; font-size: 2.5rem;">📊 Aplicativo Estatístico</h1>
-    <p style="color: #e0e0e0; margin-top: 0.5rem; font-size: 1.1rem;">App interativo de estatística e probabilidade – Fatec Jundiaí</p>
+    <p style="color: #f1f1f1; margin-top: 0.5rem; font-size: 1.1rem;">App interativo de estatística e probabilidade – Fatec Jundiaí</p>
 </div>
 """, unsafe_allow_html=True)
 
 st.markdown("""
-<div style="background-color: #f8f9fa; padding: 1.5rem; border-radius: 10px; border-left: 5px solid #667eea; margin-bottom: 2rem;">
+<div style="background-color: #f9fff6; padding: 1.5rem; border-radius: 10px; border-left: 5px solid #11998e; margin-bottom: 2rem;">
     <h4 style="color: #2c3e50; margin-top: 0; font-weight: 600;">Trabalho de Estatística – Curso de Gestão da Tecnologia da Informação – Fatec Jundiaí</h4>
     <p style="margin-bottom: 0.5rem; color: #2c3e50;"><strong>Integrantes:</strong> Anderson Martinez, Lucas Moraes, Fabiano Matheus, Victor Hugo</p>
     <p style="margin-bottom: 0; color: #2c3e50;"><strong>Professor:</strong> João Carlos dos Santos</p>
@@ -278,10 +282,21 @@ elif modulo == "Distribuições de Probabilidade":
             with col2:
                 b_unif = st.number_input("Valor máximo (b):", value=10.0, format="%.4f")
 
-            if st.button("Calcular Uniforme"):
+            calcular_unif = st.button("Calcular Uniforme", key="btn_unif")
+
+            if calcular_unif:
                 if b_unif <= a_unif:
                     st.error("O valor máximo (b) deve ser maior que o mínimo (a)!")
                 else:
+                    st.session_state.resultados_calculados['unif_calculado'] = {
+                        'a': a_unif, 'b': b_unif
+                    }
+
+            if 'unif_calculado' in st.session_state.resultados_calculados:
+                    dados = st.session_state.resultados_calculados['unif_calculado']
+                    a_unif = dados['a']
+                    b_unif = dados['b']
+
                     # Cálculos
                     media_unif = (a_unif + b_unif) / 2
                     variancia_unif = ((b_unif - a_unif) ** 2) / 12
@@ -327,37 +342,44 @@ elif modulo == "Distribuições de Probabilidade":
 
             lambda_exp = st.number_input("Taxa λ (lambda):", value=1.0, min_value=0.01, format="%.4f")
 
-            if st.button("Calcular Exponencial"):
-                # Cálculos
-                media_exp = 1 / lambda_exp
-                variancia_exp = 1 / (lambda_exp ** 2)
-                desvio_exp = np.sqrt(variancia_exp)
+            calcular_exp = st.button("Calcular Exponencial", key="btn_exp")
 
-                st.markdown("### Resultados")
-                col1, col2, col3 = st.columns(3)
-                col1.metric("Média", f"{media_exp:.4f}")
-                col2.metric("Variância", f"{variancia_exp:.4f}")
-                col3.metric("Desvio Padrão", f"{desvio_exp:.4f}")
+            if calcular_exp:
+                st.session_state.resultados_calculados['exp_calculado'] = {'lambda': lambda_exp}
 
-                # Cálculo de probabilidade
-                st.markdown("#### Calcular Probabilidade P(X ≤ x)")
-                x_exp = st.number_input("Valor de x:", value=2.0, min_value=0.0, format="%.4f", key="x_exp")
+            if 'exp_calculado' in st.session_state.resultados_calculados:
+                    lambda_exp = st.session_state.resultados_calculados['exp_calculado']['lambda']
 
-                prob_exp = 1 - np.exp(-lambda_exp * x_exp)
-                st.metric("P(X ≤ x)", f"{prob_exp:.4f} = {prob_exp * 100:.2f}%")
+                    # Cálculos
+                    media_exp = 1 / lambda_exp
+                    variancia_exp = 1 / (lambda_exp ** 2)
+                    desvio_exp = np.sqrt(variancia_exp)
 
-                # Gráfico
-                x_range = np.linspace(0, 5 / lambda_exp, 1000)
-                y_range = lambda_exp * np.exp(-lambda_exp * x_range)
+                    st.markdown("### Resultados")
+                    col1, col2, col3 = st.columns(3)
+                    col1.metric("Média", f"{media_exp:.4f}")
+                    col2.metric("Variância", f"{variancia_exp:.4f}")
+                    col3.metric("Desvio Padrão", f"{desvio_exp:.4f}")
 
-                fig = go.Figure()
-                fig.add_trace(go.Scatter(x=x_range, y=y_range, mode='lines',
-                                         line=dict(color='#764ba2', width=3),
-                                         name='f(x)'))
-                fig.update_layout(title="Função Densidade de Probabilidade",
-                                  xaxis_title="x", yaxis_title="f(x)",
-                                  showlegend=True)
-                st.plotly_chart(fig, use_container_width=True)
+                    # Cálculo de probabilidade
+                    st.markdown("#### Calcular Probabilidade P(X ≤ x)")
+                    x_exp = st.number_input("Valor de x:", value=2.0, min_value=0.0, format="%.4f", key="x_exp")
+
+                    prob_exp = 1 - np.exp(-lambda_exp * x_exp)
+                    st.metric("P(X ≤ x)", f"{prob_exp:.4f} = {prob_exp * 100:.2f}%")
+
+                    # Gráfico
+                    x_range = np.linspace(0, 5 / lambda_exp, 1000)
+                    y_range = lambda_exp * np.exp(-lambda_exp * x_range)
+
+                    fig = go.Figure()
+                    fig.add_trace(go.Scatter(x=x_range, y=y_range, mode='lines',
+                                             line=dict(color='#764ba2', width=3),
+                                             name='f(x)'))
+                    fig.update_layout(title="Função Densidade de Probabilidade",
+                                      xaxis_title="x", yaxis_title="f(x)",
+                                      showlegend=True)
+                    st.plotly_chart(fig, use_container_width=True)
 
         # ============ DISTRIBUIÇÃO NORMAL ============
         elif dist_continua == "Distribuição Normal":
@@ -421,44 +443,53 @@ elif modulo == "Distribuições de Probabilidade":
                 p_binom = st.number_input("Probabilidade de sucesso (p):", value=0.5,
                                           min_value=0.0, max_value=1.0, format="%.4f")
 
-            if st.button("Calcular Binomial"):
-                # Cálculos
-                media_binom = n_binom * p_binom
-                variancia_binom = n_binom * p_binom * (1 - p_binom)
-                desvio_binom = np.sqrt(variancia_binom)
+            calcular_binom = st.button("Calcular Binomial", key="btn_binom")
 
-                st.markdown("### Resultados")
-                col1, col2, col3 = st.columns(3)
-                col1.metric("Média", f"{media_binom:.4f}")
-                col2.metric("Variância", f"{variancia_binom:.4f}")
-                col3.metric("Desvio Padrão", f"{desvio_binom:.4f}")
+            if calcular_binom:
+                st.session_state.resultados_calculados['binom_calculado'] = {'n': n_binom, 'p': p_binom}
 
-                # Cálculo de probabilidade específica
-                st.markdown("#### Calcular Probabilidades")
-                tipo_prob = st.radio("Tipo:", ["P(X = k)", "P(X ≤ k)", "P(X ≥ k)"], horizontal=True)
-                k_binom = st.number_input("Valor de k:", value=5, min_value=0, max_value=n_binom, step=1)
+            if 'binom_calculado' in st.session_state.resultados_calculados:
+                    dados = st.session_state.resultados_calculados['binom_calculado']
+                    n_binom = dados['n']
+                    p_binom = dados['p']
 
-                if tipo_prob == "P(X = k)":
-                    prob = stats.binom.pmf(k_binom, n_binom, p_binom)
-                elif tipo_prob == "P(X ≤ k)":
-                    prob = stats.binom.cdf(k_binom, n_binom, p_binom)
-                else:  # P(X ≥ k)
-                    prob = 1 - stats.binom.cdf(k_binom - 1, n_binom, p_binom)
+                    # Cálculos
+                    media_binom = n_binom * p_binom
+                    variancia_binom = n_binom * p_binom * (1 - p_binom)
+                    desvio_binom = np.sqrt(variancia_binom)
 
-                st.metric(tipo_prob, f"{prob:.4f} = {prob * 100:.2f}%")
+                    st.markdown("### Resultados")
+                    col1, col2, col3 = st.columns(3)
+                    col1.metric("Média", f"{media_binom:.4f}")
+                    col2.metric("Variância", f"{variancia_binom:.4f}")
+                    col3.metric("Desvio Padrão", f"{desvio_binom:.4f}")
 
-                # Gráfico
-                x_range = np.arange(0, n_binom + 1)
-                y_range = stats.binom.pmf(x_range, n_binom, p_binom)
+                    # Cálculo de probabilidade específica
+                    st.markdown("#### Calcular Probabilidades")
+                    tipo_prob = st.radio("Tipo:", ["P(X = k)", "P(X ≤ k)", "P(X ≥ k)"], horizontal=True)
+                    k_binom = st.number_input("Valor de k:", value=5, min_value=0, max_value=n_binom, step=1)
 
-                fig = go.Figure()
-                fig.add_trace(go.Bar(x=x_range, y=y_range,
-                                     marker_color='#667eea',
-                                     name='P(X=k)'))
-                fig.update_layout(title="Função Massa de Probabilidade",
-                                  xaxis_title="k", yaxis_title="P(X=k)",
-                                  showlegend=True)
-                st.plotly_chart(fig, use_container_width=True)
+                    if tipo_prob == "P(X = k)":
+                        prob = stats.binom.pmf(k_binom, n_binom, p_binom)
+                    elif tipo_prob == "P(X ≤ k)":
+                        prob = stats.binom.cdf(k_binom, n_binom, p_binom)
+                    else:  # P(X ≥ k)
+                        prob = 1 - stats.binom.cdf(k_binom - 1, n_binom, p_binom)
+
+                    st.metric(tipo_prob, f"{prob:.4f} = {prob * 100:.2f}%")
+
+                    # Gráfico
+                    x_range = np.arange(0, n_binom + 1)
+                    y_range = stats.binom.pmf(x_range, n_binom, p_binom)
+
+                    fig = go.Figure()
+                    fig.add_trace(go.Bar(x=x_range, y=y_range,
+                                         marker_color='#667eea',
+                                         name='P(X=k)'))
+                    fig.update_layout(title="Função Massa de Probabilidade",
+                                      xaxis_title="k", yaxis_title="P(X=k)",
+                                      showlegend=True)
+                    st.plotly_chart(fig, use_container_width=True)
 
         # ============ DISTRIBUIÇÃO POISSON ============
         elif dist_discreta == "Distribuição Poisson":
@@ -467,44 +498,52 @@ elif modulo == "Distribuições de Probabilidade":
 
             lambda_pois = st.number_input("Taxa média (λ):", value=3.0, min_value=0.01, format="%.4f")
 
-            if st.button("Calcular Poisson"):
-                # Cálculos
-                media_pois = lambda_pois
-                variancia_pois = lambda_pois
-                desvio_pois = np.sqrt(variancia_pois)
+            calcular_pois = st.button("Calcular Poisson", key="btn_pois")
 
-                st.markdown("### Resultados")
-                col1, col2, col3 = st.columns(3)
-                col1.metric("Média", f"{media_pois:.4f}")
-                col2.metric("Variância", f"{variancia_pois:.4f}")
-                col3.metric("Desvio Padrão", f"{desvio_pois:.4f}")
+            if calcular_pois:
+                st.session_state.resultados_calculados['pois_calculado'] = {'lambda': lambda_pois}
 
-                # Cálculo de probabilidade específica
-                st.markdown("#### Calcular Probabilidades")
-                tipo_prob = st.radio("Tipo:", ["P(X = k)", "P(X ≤ k)", "P(X ≥ k)"], horizontal=True, key="tipo_pois")
-                k_pois = st.number_input("Valor de k:", value=3, min_value=0, step=1, key="k_pois")
+            if 'pois_calculado' in st.session_state.resultados_calculados:
+                    lambda_pois = st.session_state.resultados_calculados['pois_calculado']['lambda']
 
-                if tipo_prob == "P(X = k)":
-                    prob = stats.poisson.pmf(k_pois, lambda_pois)
-                elif tipo_prob == "P(X ≤ k)":
-                    prob = stats.poisson.cdf(k_pois, lambda_pois)
-                else:  # P(X ≥ k)
-                    prob = 1 - stats.poisson.cdf(k_pois - 1, lambda_pois)
+                    # Cálculos
+                    media_pois = lambda_pois
+                    variancia_pois = lambda_pois
+                    desvio_pois = np.sqrt(variancia_pois)
 
-                st.metric(tipo_prob, f"{prob:.4f} = {prob * 100:.2f}%")
+                    st.markdown("### Resultados")
+                    col1, col2, col3 = st.columns(3)
+                    col1.metric("Média", f"{media_pois:.4f}")
+                    col2.metric("Variância", f"{variancia_pois:.4f}")
+                    col3.metric("Desvio Padrão", f"{desvio_pois:.4f}")
 
-                # Gráfico
-                x_range = np.arange(0, int(lambda_pois * 3) + 1)
-                y_range = stats.poisson.pmf(x_range, lambda_pois)
+                    # Cálculo de probabilidade específica
+                    st.markdown("#### Calcular Probabilidades")
+                    tipo_prob = st.radio("Tipo:", ["P(X = k)", "P(X ≤ k)", "P(X ≥ k)"], horizontal=True,
+                                         key="tipo_pois")
+                    k_pois = st.number_input("Valor de k:", value=3, min_value=0, step=1, key="k_pois")
 
-                fig = go.Figure()
-                fig.add_trace(go.Bar(x=x_range, y=y_range,
-                                     marker_color='#764ba2',
-                                     name='P(X=k)'))
-                fig.update_layout(title="Função Massa de Probabilidade",
-                                  xaxis_title="k", yaxis_title="P(X=k)",
-                                  showlegend=True)
-                st.plotly_chart(fig, use_container_width=True)
+                    if tipo_prob == "P(X = k)":
+                        prob = stats.poisson.pmf(k_pois, lambda_pois)
+                    elif tipo_prob == "P(X ≤ k)":
+                        prob = stats.poisson.cdf(k_pois, lambda_pois)
+                    else:  # P(X ≥ k)
+                        prob = 1 - stats.poisson.cdf(k_pois - 1, lambda_pois)
+
+                    st.metric(tipo_prob, f"{prob:.4f} = {prob * 100:.2f}%")
+
+                    # Gráfico
+                    x_range = np.arange(0, int(lambda_pois * 3) + 1)
+                    y_range = stats.poisson.pmf(x_range, lambda_pois)
+
+                    fig = go.Figure()
+                    fig.add_trace(go.Bar(x=x_range, y=y_range,
+                                         marker_color='#764ba2',
+                                         name='P(X=k)'))
+                    fig.update_layout(title="Função Massa de Probabilidade",
+                                      xaxis_title="k", yaxis_title="P(X=k)",
+                                      showlegend=True)
+                    st.plotly_chart(fig, use_container_width=True)
 
 # ===============================================
 # MÓDULO 3: REGRESSÃO LINEAR
@@ -538,10 +577,22 @@ elif modulo == "Regressão Linear":
         X_data = np.linspace(0, 10, n_pontos)
         Y_data = 2 + 3 * X_data + np.random.normal(0, ruido, n_pontos)
 
-    if st.button("Calcular Regressão Linear"):
+    calcular_reg = st.button("Calcular Regressão Linear", key="btn_reg")
+
+    if calcular_reg:
         if len(X_data) < 2:
             st.error("São necessários pelo menos 2 pontos para calcular a regressão!")
         else:
+            st.session_state.resultados_calculados['reg_calculado'] = {
+                'X_data': X_data.tolist(),
+                'Y_data': Y_data.tolist()
+            }
+
+    if 'reg_calculado' in st.session_state.resultados_calculados:
+            dados = st.session_state.resultados_calculados['reg_calculado']
+            X_data = np.array(dados['X_data'])
+            Y_data = np.array(dados['Y_data'])
+
             # Cálculos da regressão
             n = len(X_data)
             sum_x = np.sum(X_data)
