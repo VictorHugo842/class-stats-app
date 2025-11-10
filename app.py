@@ -22,7 +22,7 @@ st.markdown("""
 st.markdown("""
 <div style="background-color: #f9fff6; padding: 1.5rem; border-radius: 10px; border-left: 5px solid #11998e; margin-bottom: 2rem;">
     <h4 style="color: #2c3e50; margin-top: 0; font-weight: 600;">Trabalho de Estatística – Curso de Gestão da Tecnologia da Informação – Fatec Jundiaí</h4>
-    <p style="margin-bottom: 0.5rem; color: #2c3e50;"><strong>Integrantes:</strong> Anderson Martinez, Lucas Moraes, Fabiano Matheus, Victor Hugo</p>
+    <p style="margin-bottom: 0.5rem; color: #2c3e50;"><strong>Integrantes:</strong> Anderson Martinez, Fabiano Matheus, Lucas Moraes, Victor Hugo</p>
     <p style="margin-bottom: 0; color: #2c3e50;"><strong>Professor:</strong> João Carlos dos Santos</p>
 </div>
 """, unsafe_allow_html=True)
