@@ -5,12 +5,12 @@ import plotly.graph_objects as go
 from scipy import stats
 from scipy.optimize import curve_fit
 
-st.set_page_config(page_title="Aplicativo Estatístico Completo", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Aplicativo Estatístico", layout="wide", initial_sidebar_state="collapsed")
 
 # ---------------- HEADER ----------------
 st.markdown("""
 <div style="background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); padding: 2rem; border-radius: 10px; margin-bottom: 2rem; text-align:center;">
-    <h1 style="color: white; margin: 0; font-size: 2.5rem;">📊 Aplicativo Estatístico Completo</h1>
+    <h1 style="color: white; margin: 0; font-size: 2.5rem;">📊 Aplicativo Estatístico</h1>
     <p style="color: #e0e0e0; margin-top: 0.5rem; font-size: 1.1rem;">App interativo de estatística e probabilidade – Fatec Jundiaí</p>
 </div>
 """, unsafe_allow_html=True)
@@ -152,8 +152,7 @@ if modulo == "Estatística Descritiva":
                 mediana = Li + ((N2 - F_ant) / fi_class) * h if fi_class > 0 else Li
                 break
 
-        # ---------------- MODA (CORRIGIDA) ----------------
-        # Remove frequências zero antes de verificar
+        # ---------------- MODA ----------------
         freq_nao_zero = [f for f in frequencias if f > 0]
 
         # Verifica amodalidade: se não há frequências não-zero ou todas são iguais
@@ -694,7 +693,7 @@ elif modulo == "Regressão Linear":
 st.markdown("---")
 st.markdown("""
 <div style="text-align: center; color: #6c757d; padding: 1rem;">
-    <p>Aplicativo Estatístico Completo | Fatec Jundiaí | 2025</p>
+    <p>Aplicativo Estatístico | Fatec Jundiaí | 2025</p>
     <p style="font-size: 0.9em; margin-top: 0.5rem;">
         Estatística Descritiva • Distribuições de Probabilidade • Regressão Linear
     </p>
