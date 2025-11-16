@@ -269,11 +269,12 @@ elif modulo == "Distribuições de Probabilidade":
 
     if tipo_var == "Contínua":
         dist_continua = st.selectbox("Escolha a distribuição:",
-                                     ["Distribuição Uniforme", "Distribuição Exponencial", "Distribuição Normal"])
+                             ["Distribuição Uniforme", "Distribuição Exponencial", 
+                              "Distribuição Normal (Padronizada Z)", "Distribuição Normal"])
 
         # ============ DISTRIBUIÇÃO UNIFORME ============
         if dist_continua == "Distribuição Uniforme":
-            st.markdown("#### Distribuição Uniforme Contínua")
+            st.markdown("#### Distribuição Uniforme")
             st.markdown("Para uma variável aleatória X ~ U(a, b)")
 
             col1, col2 = st.columns(2)
@@ -381,8 +382,8 @@ elif modulo == "Distribuições de Probabilidade":
                                       showlegend=True)
                     st.plotly_chart(fig, use_container_width=True)
 
-        # ============ DISTRIBUIÇÃO NORMAL ============
-        elif dist_continua == "Distribuição Normal":
+        # ============ DISTRIBUIÇÃO NORMAL PADRONIZADA ============
+        elif dist_continua == "Distribuição Normal (Padronizada Z)":
             st.markdown("#### Distribuição Normal (Padronizada Z)")
             st.markdown("Para uma variável aleatória Z ~ N(0, 1)")
 
@@ -427,6 +428,211 @@ elif modulo == "Distribuições de Probabilidade":
                               showlegend=True)
             st.plotly_chart(fig, use_container_width=True)
 
+        # ============ DISTRIBUIÇÃO NORMAL ============
+        elif dist_continua == "Distribuição Normal":
+            st.markdown("#### Distribuição Normal")
+            st.markdown("Insira os dados para calcular média, desvio padrão e outras estatísticas")
+
+            modo_normal = st.radio("Tipo de entrada:", 
+                                   ["Dados Listados", "Dados Xi e Fi", "Dados em Classes"], 
+                                   horizontal=True)
+
+            if modo_normal == "Dados Listados":
+                st.markdown("##### Insira os dados separados por vírgula ou espaço")
+                dados_input = st.text_area("Dados:", value="1, 2, 2, 5, 5, 5", height=100)
+                
+                if st.button("Calcular Normal (Listados)"):
+                    try:
+                        dados = [float(x.strip()) for x in dados_input.replace(',', ' ').split() if x.strip()]
+                        if len(dados) < 2:
+                            st.error("Insira pelo menos 2 valores!")
+                        else:
+                            n = len(dados)
+                            media = np.mean(dados)
+                            desvio = np.std(dados, ddof=1)
+                            mediana = np.median(dados)
+                            
+                            # Moda
+                            valores_unicos, contagens = np.unique(dados, return_counts=True)
+                            max_freq = contagens.max()
+                            if len(set(contagens)) == 1:
+                                moda = "∄ (Amodal)"
+                            else:
+                                modas = valores_unicos[contagens == max_freq]
+                                moda = ", ".join([f"{m:.2f}" for m in modas[:3]])
+                            
+                            st.session_state.resultados_calculados['normal_calculado'] = {
+                                'media': media, 'desvio': desvio, 'n': n, 
+                                'mediana': mediana, 'moda': moda
+                            }
+                    except ValueError:
+                        st.error("Dados inválidos! Use apenas números.")
+
+            elif modo_normal == "Dados Xi e Fi":
+                st.markdown("##### Insira valores (Xi) e frequências (Fi)")
+                df_normal_xi = pd.DataFrame({
+                    "Xi (Valor)": [1.0, 2.0, 5.0],
+                    "Fi (Frequência)": [1.0, 2.0, 3.0]
+                })
+                df_normal_xi = st.data_editor(df_normal_xi, num_rows="dynamic", key="editor_normal_xi")
+                
+                if st.button("Calcular Normal (Xi e Fi)"):
+                    df_normal_xi = df_normal_xi.dropna()
+                    if len(df_normal_xi) < 2:
+                        st.error("Insira pelo menos 2 valores!")
+                    else:
+                        xi = df_normal_xi["Xi (Valor)"].astype(float).values
+                        fi = df_normal_xi["Fi (Frequência)"].astype(float).values
+                        
+                        n = fi.sum()
+                        media = np.sum(xi * fi) / n
+                        variancia = np.sum(fi * (xi - media)**2) / (n - 1)
+                        desvio = np.sqrt(variancia)
+                        
+                        # Mediana
+                        fac = np.cumsum(fi)
+                        idx_mediana = np.where(fac >= n/2)[0][0]
+                        mediana = xi[idx_mediana]
+                        
+                        # Moda
+                        max_fi = fi.max()
+                        if len(set(fi)) == 1:
+                            moda = "∄ (Amodal)"
+                        else:
+                            modas = xi[fi == max_fi]
+                            moda = ", ".join([f"{m:.2f}" for m in modas[:3]])
+                        
+                        st.session_state.resultados_calculados['normal_calculado'] = {
+                            'media': media, 'desvio': desvio, 'n': int(n),
+                            'mediana': mediana, 'moda': moda
+                        }
+
+            else:  # Dados em Classes
+                st.markdown("##### Configure as classes")
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    LI_norm = st.number_input("LI (Limite Inferior):", value=10.0, format="%.2f", key="li_norm")
+                with col2:
+                    H_norm = st.number_input("H (Amplitude):", value=5.0, format="%.2f", key="h_norm")
+                with col3:
+                    k_norm = st.selectbox("Número de Classes:", [3, 5, 7], index=0, key="k_norm")
+                
+                df_classes_norm = pd.DataFrame({
+                    "Limite Inferior": [LI_norm + i * H_norm for i in range(k_norm)],
+                    "Limite Superior": [LI_norm + (i + 1) * H_norm for i in range(k_norm)],
+                    "Fi (Frequência)": [3.0, 5.0, 2.0] + [0.0] * (k_norm - 3)
+                })
+                df_classes_norm = st.data_editor(df_classes_norm, num_rows="fixed", key="editor_classes_norm")
+                
+                if st.button("Calcular Normal (Classes)"):
+                    df_classes_norm = df_classes_norm.fillna(0.0)
+                    li = df_classes_norm["Limite Inferior"].astype(float).values
+                    ls = df_classes_norm["Limite Superior"].astype(float).values
+                    fi = df_classes_norm["Fi (Frequência)"].astype(float).values
+                    xi = (li + ls) / 2
+                    
+                    n = fi.sum()
+                    media = np.sum(xi * fi) / n
+                    variancia = np.sum(fi * (xi - media)**2) / (n - 1)
+                    desvio = np.sqrt(variancia)
+                    
+                    # Mediana
+                    fac = np.cumsum(fi)
+                    idx_med = np.where(fac >= n/2)[0][0]
+                    F_ant = fac[idx_med - 1] if idx_med > 0 else 0
+                    mediana = li[idx_med] + ((n/2 - F_ant) / fi[idx_med]) * H_norm if fi[idx_med] > 0 else xi[idx_med]
+                    
+                    # Moda Bruta e Czuber
+                    max_fi = fi.max()
+                    if len(set(fi[fi > 0])) == 1:
+                        moda_bruta = "∄ (Amodal)"
+                        moda_czuber = "∄ (Amodal)"
+                    else:
+                        idx_moda = np.where(fi == max_fi)[0][0]
+                        moda_bruta = f"{xi[idx_moda]:.2f}"
+                        
+                        f0 = fi[idx_moda - 1] if idx_moda > 0 else 0
+                        f2 = fi[idx_moda + 1] if idx_moda < len(fi) - 1 else 0
+                        if (max_fi - f0) + (max_fi - f2) != 0:
+                            moda_cz = li[idx_moda] + ((max_fi - f0) / ((max_fi - f0) + (max_fi - f2))) * H_norm
+                            moda_czuber = f"{moda_cz:.2f}"
+                        else:
+                            moda_czuber = moda_bruta
+                    
+                    st.session_state.resultados_calculados['normal_calculado'] = {
+                        'media': media, 'desvio': desvio, 'n': int(n),
+                        'mediana': mediana, 'moda': moda_bruta, 'moda_czuber': moda_czuber
+                    }
+
+            # Exibir resultados
+            if 'normal_calculado' in st.session_state.resultados_calculados:
+                dados = st.session_state.resultados_calculados['normal_calculado']
+                
+                st.markdown("### Estatísticas Descritivas")
+                col1, col2, col3 = st.columns(3)
+                col1.metric("Média (μ)", f"{dados['media']:.4f}")
+                col2.metric("Desvio Padrão (σ)", f"{dados['desvio']:.4f}")
+                col3.metric("Tamanho da Amostra (n)", f"{dados['n']}")
+                
+                col1, col2 = st.columns(2)
+                col1.metric("Mediana", f"{dados['mediana']:.4f}" if isinstance(dados['mediana'], float) else dados['mediana'])
+                if modo_normal == "Dados em Classes" and 'moda_czuber' in dados:
+                    col2.metric("Moda Bruta", dados['moda'])
+                    st.metric("Moda Czuber", dados['moda_czuber'])
+                else:
+                    col2.metric("Moda", dados['moda'])
+                
+                # Cálculo de probabilidades
+                st.markdown("### Calcular Probabilidades com Distribuição Normal")
+                st.markdown(f"X ~ N({dados['media']:.2f}, {dados['desvio']:.2f}²)")
+                
+                tipo_prob_norm = st.radio("Tipo de cálculo:",
+                                         ["P(X ≤ x)", "P(X ≥ x)", "P(x1 ≤ X ≤ x2)"],
+                                         horizontal=True, key="tipo_prob_norm")
+                
+                if tipo_prob_norm in ["P(X ≤ x)", "P(X ≥ x)"]:
+                    x_val = st.number_input("Valor de x:", value=float(dados['media']), format="%.4f", key="x_norm")
+                    
+                    z = (x_val - dados['media']) / dados['desvio']
+                    
+                    if tipo_prob_norm == "P(X ≤ x)":
+                        prob = stats.norm.cdf(z)
+                    else:
+                        prob = 1 - stats.norm.cdf(z)
+                    
+                    st.metric(tipo_prob_norm, f"{prob:.4f} = {prob*100:.2f}%")
+                    st.info(f"Valor Z padronizado: {z:.4f}")
+                
+                else:  # P(x1 ≤ X ≤ x2)
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        x1_val = st.number_input("Valor de x1:", value=float(dados['media'] - dados['desvio']), format="%.4f", key="x1_norm")
+                    with col2:
+                        x2_val = st.number_input("Valor de x2:", value=float(dados['media'] + dados['desvio']), format="%.4f", key="x2_norm")
+                    
+                    z1 = (x1_val - dados['media']) / dados['desvio']
+                    z2 = (x2_val - dados['media']) / dados['desvio']
+                    
+                    prob = stats.norm.cdf(z2) - stats.norm.cdf(z1)
+                    
+                    st.metric("P(x1 ≤ X ≤ x2)", f"{prob:.4f} = {prob*100:.2f}%")
+                    st.info(f"Valores Z: z1 = {z1:.4f}, z2 = {z2:.4f}")
+                
+                # Gráfico
+                st.markdown("#### Visualização da Distribuição")
+                x_range = np.linspace(dados['media'] - 4*dados['desvio'], 
+                                     dados['media'] + 4*dados['desvio'], 1000)
+                y_range = stats.norm.pdf(x_range, dados['media'], dados['desvio'])
+                
+                fig = go.Figure()
+                fig.add_trace(go.Scatter(x=x_range, y=y_range, mode='lines',
+                                        line=dict(color='#667eea', width=3),
+                                        fill='tozeroy', name=f'N({dados["media"]:.2f}, {dados["desvio"]:.2f}²)'))
+                fig.update_layout(title="Distribuição Normal",
+                                 xaxis_title="x", yaxis_title="f(x)",
+                                 showlegend=True)
+                st.plotly_chart(fig, use_container_width=True)
+                
     else:  # VARIÁVEIS DISCRETAS
         dist_discreta = st.selectbox("Escolha a distribuição:",
                                      ["Distribuição Binomial", "Distribuição Poisson"])
@@ -608,8 +814,9 @@ elif modulo == "Regressão Linear":
             # Coeficiente de correlação
             r = (n * sum_xy - sum_x * sum_y) / np.sqrt((n * sum_x2 - sum_x ** 2) * (n * sum_y2 - sum_y ** 2))
 
-            # Coeficiente de determinação
-            r2 = r ** 2
+            # Determinação
+            r2_percent = r ** 2 * 100
+            r2_percent = round(r2_percent, 2)
 
             # Valores preditos
             Y_pred = a + b * X_data
@@ -627,11 +834,16 @@ elif modulo == "Regressão Linear":
             col1.metric("Intercepto (a)", f"{a:.4f}")
             col2.metric("Inclinação (b)", f"{b:.4f}")
             col3.metric("Correlação (r)", f"{r:.4f}")
-            col4.metric("R² (Determinação)", f"{r2:.4f}")
+            col4.metric("R² (Determinação)", f"{r2_percent:.2f}%")
 
-            col1, col2 = st.columns(2)
+            col1, col2, col3 = st.columns(3)
             col1.metric("Erro Padrão", f"{erro_padrao:.4f}")
             col2.metric("Número de Pontos", f"{n}")
+            
+            # Calcular domínio
+            x_min = X_data.min()
+            x_max = X_data.max()
+            col3.metric("Domínio (X)", f"[{x_min:.2f}, {x_max:.2f}]")
 
             # Equação
             st.markdown(f"#### Equação da Reta")
@@ -641,6 +853,11 @@ elif modulo == "Regressão Linear":
             # Previsão
             st.markdown("#### Fazer Previsão")
             x_prev = st.number_input("Valor de X para prever Y:", value=float(np.mean(X_data)), format="%.4f")
+            
+            # Aviso de extrapolação
+            if x_prev < x_min or x_prev > x_max:
+                st.warning(f"⚠️ Atenção: O valor {x_prev:.4f} está fora do domínio observado [{x_min:.2f}, {x_max:.2f}]. A previsão pode não ser confiável (extrapolação).")
+            
             y_prev = a + b * x_prev
             st.metric("Y previsto", f"{y_prev:.4f}")
 
@@ -732,12 +949,36 @@ elif modulo == "Regressão Linear":
                 )
                 st.plotly_chart(fig3, use_container_width=True)
 
+            # Domínio e Contradomínio
+            st.markdown("### Domínio e Contradomínio")
+            
+            # Calcular contradomínio (valores de Y preditos no intervalo de X)
+            y_min_pred = a + b * x_min
+            y_max_pred = a + b * x_max
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown("#### Domínio (X)")
+                st.markdown(f"**D = [{x_min:.4f}, {x_max:.4f}]**")
+                st.caption("Intervalo dos valores observados de X")
+            
+            with col2:
+                st.markdown("#### Contradomínio (Y)")
+                # O contradomínio depende da inclinação
+                if b > 0:
+                    st.markdown(f"**CD = [{y_min_pred:.4f}, {y_max_pred:.4f}]**")
+                else:
+                    st.markdown(f"**CD = [{y_max_pred:.4f}, {y_min_pred:.4f}]**")
+                st.caption("Intervalo dos valores preditos de Y no domínio")
+
             # Interpretação
             st.markdown("### Interpretação")
             st.markdown(f"""
             - **Correlação (r = {r:.4f})**: {'Forte' if abs(r) > 0.7 else 'Moderada' if abs(r) > 0.4 else 'Fraca'} correlação {'positiva' if r > 0 else 'negativa'}
-            - **R² = {r2:.4f}**: O modelo explica {r2 * 100:.2f}% da variabilidade dos dados
+            - **R² = {r2_percent:.2f}%**: O modelo explica {r2_percent:.2f}% da variabilidade dos dados
             - **Interpretação da inclinação**: Para cada unidade de aumento em X, Y {'aumenta' if b > 0 else 'diminui'} em média {abs(b):.4f} unidades
+            - **Domínio**: A regressão é válida para valores de X entre {x_min:.4f} e {x_max:.4f}
+            - **Extrapolação**: Previsões fora do domínio observado podem não ser confiáveis
             """)
 
 # ---------------- FOOTER ----------------

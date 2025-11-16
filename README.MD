@@ -43,6 +43,10 @@ O aplicativo oferece funcionalidades para analisar dados agrupados, incluindo:
 2. Execute o aplicativo com:  
    `streamlit run seu_arquivo.py`
 
+2. Rodar em venv:
+   `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
+    `.\venv\Scripts\Activate.ps1`
+
 3. Abra o navegador, configure limite mínimo (L0), amplitude da classe (h) e número de classes (k), depois insira as frequências e clique em "Calcular Estatísticas".
 
 ## Integrantes do Grupo
