@@ -101,15 +101,101 @@ if modulo == "Estatística Descritiva":
 
     else:
         st.markdown("### Valores Discretos (Xi)")
-        st.markdown("Informe os valores e frequências na tabela abaixo:")
-        df_discreto = pd.DataFrame({
-            "Valor": [10.0, 12.0, 15.0, 17.0, 20.0],
-            "Frequência (fi)": [3.0, 5.0, 5.0, 5.0, 2.0]
-        })
-        df_discreto = st.data_editor(df_discreto, num_rows="dynamic", key="editor_discreto_v3")
-        df_discreto = df_discreto.fillna(0.0)
-        valores = df_discreto["Valor"].astype(float).tolist()
-        frequencias = df_discreto["Frequência (fi)"].astype(float).tolist()
+        
+        metodo_entrada_discreto = st.radio("Método de entrada:", 
+                                           ["Lista de Valores", "Tabela Xi e Fi"], 
+                                           horizontal=True,
+                                           key="metodo_entrada_discreto")
+        
+        if metodo_entrada_discreto == "Lista de Valores":
+            st.markdown("**Insira os valores separados por vírgula ou espaço:**")
+            st.caption("Exemplo: 0,0,1,2,1,3,4,5 ou 0 0 1 2 1 3 4 5")
+            
+            valores_input = st.text_area("Valores:", value="0,0,1,2,1,3,4,5", height=100, key="valores_discretos_input")
+            
+            processar_valores = st.button("Processar Valores", key="processar_discreto")
+            
+            if processar_valores:
+                try:
+                    # Converter string em lista de valores
+                    valores_lista = [float(x.strip()) for x in valores_input.replace(',', ' ').split() if x.strip()]
+                    
+                    if len(valores_lista) == 0:
+                        st.error("Insira pelo menos um valor!")
+                    else:
+                        # Calcular frequências
+                        valores_unicos, contagens = np.unique(valores_lista, return_counts=True)
+                        
+                        # Criar DataFrame
+                        df_discreto = pd.DataFrame({
+                            "Xi (Valor)": valores_unicos,
+                            "Fi (Frequência)": contagens
+                        })
+                        
+                        st.session_state.df_discreto_processado = df_discreto
+                        st.success(f"✅ {len(valores_lista)} valores processados com sucesso!")
+                        
+                except ValueError:
+                    st.error("Erro ao processar valores! Certifique-se de inserir apenas números.")
+            
+            if 'df_discreto_processado' in st.session_state:
+                st.markdown("**Tabela de Frequências Gerada:**")
+                df_discreto = st.data_editor(st.session_state.df_discreto_processado, 
+                                            num_rows="dynamic", 
+                                            key="editor_discreto_auto")
+                df_discreto = df_discreto.fillna(0.0)
+                valores = df_discreto["Xi (Valor)"].astype(float).tolist()
+                frequencias = df_discreto["Fi (Frequência)"].astype(float).tolist()
+
+                # --- CORREÇÃO --- 
+                # Previne erros quando tabela está vazia ou com frequências inválidas
+                if len(valores) == 0:
+                    st.warning("Insira pelo menos um valor na tabela.")
+                    st.stop()
+
+                if sum(frequencias) == 0:
+                    st.warning("A soma das frequências deve ser maior que zero.")
+                    st.stop()
+
+                # Mantém compatibilidade com o restante do módulo
+                limites_inferiores = valores[:]
+                limites_superiores = valores[:]
+                pontos_medios = valores[:]
+                k = len(valores)
+                h = 0  # Discreto não usa amplitude, mantém zero sem quebrar nada
+
+            else:
+                # Valores padrão vazios - aguardando processamento
+                valores = []
+                frequencias = []
+        
+        else:  # Tabela Xi e Fi
+            st.markdown("**Informe os valores e frequências na tabela abaixo:**")
+            df_discreto = pd.DataFrame({
+                "Xi (Valor)": [10.0, 12.0, 15.0, 17.0, 20.0],
+                "Fi (Frequência)": [3.0, 5.0, 5.0, 5.0, 2.0]
+            })
+            df_discreto = st.data_editor(df_discreto, num_rows="dynamic", key="editor_discreto_manual")
+            df_discreto = df_discreto.fillna(0.0)
+            valores = df_discreto["Xi (Valor)"].astype(float).tolist()
+            frequencias = df_discreto["Fi (Frequência)"].astype(float).tolist()
+
+                        # --- CORREÇÃO --- 
+            # Previne erros quando tabela está vazia ou com frequências inválidas
+            if len(valores) == 0:
+                st.warning("Insira pelo menos um valor na tabela.")
+                st.stop()
+
+            if sum(frequencias) == 0:
+                st.warning("A soma das frequências deve ser maior que zero.")
+                st.stop()
+
+            # Mantém compatibilidade com o restante do módulo
+            limites_inferiores = valores[:]
+            limites_superiores = valores[:]
+            pontos_medios = valores[:]
+            k = len(valores)
+            h = 0  # Discreto não usa amplitude, mantém zero sem quebrar nada
 
         limites_inferiores = valores
         limites_superiores = valores
@@ -159,13 +245,19 @@ if modulo == "Estatística Descritiva":
         # ---------------- MODA ----------------
         freq_nao_zero = [f for f in frequencias if f > 0]
 
-        # Verifica amodalidade: se não há frequências não-zero ou todas são iguais
-        if len(freq_nao_zero) == 0 or (len(set(freq_nao_zero)) == 1):
-            modas = ["∄ (Amodal)"]
-            modas_brutas = ["∄ (Amodal)"]
-            modas_czuber = ["∄ (Amodal)"]
+        # inicializa para garantir que sempre existam as variáveis
+        indices_modas = []
+        modas = []
+        modas_brutas = []
+        modas_czuber = []
+
+        if len(freq_nao_zero) == 0:
+            # sem dados válidos: mantém listas vazias (não quebra o restante)
             indices_modas = []
-        else:
+            modas = []
+            modas_brutas = []
+            modas_czuber = []
+        else:            
             max_fi = max(frequencias)
             indices_modas = [i for i, f in enumerate(frequencias) if f == max_fi]
             modas = [pontos_medios[i] for i in indices_modas][:3]
