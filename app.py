@@ -562,41 +562,107 @@ elif modulo == "Distribuições de Probabilidade":
 
             elif modo_normal == "Dados Xi e Fi":
                 st.markdown("##### Insira valores (Xi) e frequências (Fi)")
-                df_normal_xi = pd.DataFrame({
-                    "Xi (Valor)": [1.0, 2.0, 5.0],
-                    "Fi (Frequência)": [1.0, 2.0, 3.0]
-                })
-                df_normal_xi = st.data_editor(df_normal_xi, num_rows="dynamic", key="editor_normal_xi")
-                
-                if st.button("Calcular Normal (Xi e Fi)"):
+
+                usar_lista_normal = st.checkbox(
+                    "Inserir valores listados (ex: 1,1,2,5,5,5)",
+                    key="checkbox_normal_listado"
+                )
+
+                # -------------------------------------------------------------------
+                # MODO LISTADO → o usuário insere valores e o sistema gera Xi e Fi
+                # -------------------------------------------------------------------
+                if usar_lista_normal:
+
+                    valores_input = st.text_area(
+                        "Valores:",
+                        value="1,1,2,5,5,5",
+                        height=100,
+                        key="valores_listados_normal_input"
+                    )
+
+                    if st.button("Gerar Tabela Xi e Fi", key="gerar_normal_listado"):
+                        try:
+                            lista = [
+                                float(x.strip())
+                                for x in valores_input.replace(",", " ").split()
+                                if x.strip()
+                            ]
+
+                            if len(lista) == 0:
+                                st.error("Insira pelo menos um valor!")
+                            else:
+                                valores_unicos, contagens = np.unique(lista, return_counts=True)
+
+                                st.session_state.df_normal_xi = pd.DataFrame({
+                                    "Xi (Valor)": valores_unicos,
+                                    "Fi (Frequência)": contagens
+                                })
+
+                                st.success("Tabela gerada automaticamente!")
+
+                        except:
+                            st.error("Erro ao processar valores. Insira apenas números.")
+
+                    # Exibir tabela gerada automaticamente
+                    if "df_normal_xi" in st.session_state:
+                        df_normal_xi = st.data_editor(
+                            st.session_state.df_normal_xi,
+                            num_rows="dynamic",
+                            key="editor_normal_listado"
+                        )
+
+                    else:
+                        df_normal_xi = pd.DataFrame(columns=["Xi (Valor)", "Fi (Frequência)"])
+
+                # -------------------------------------------------------------------
+                # MODO MANUAL → tabela de Xi e Fi preenchida pelo usuário
+                # -------------------------------------------------------------------
+                else:
+                    df_normal_xi = pd.DataFrame({
+                        "Xi (Valor)": [1.0, 2.0, 5.0],
+                        "Fi (Frequência)": [1.0, 2.0, 3.0]
+                    })
+
+                    df_normal_xi = st.data_editor(
+                        df_normal_xi,
+                        num_rows="dynamic",
+                        key="editor_normal_xi"
+                    )
+
+                # -------------------------------------------------------------------
+                # CÁLCULOS
+                # -------------------------------------------------------------------
+                if st.button("Calcular Normal (Xi e Fi)", key="calcular_normal_final"):
+
                     df_normal_xi = df_normal_xi.dropna()
+
                     if len(df_normal_xi) < 2:
                         st.error("Insira pelo menos 2 valores!")
                     else:
                         xi = df_normal_xi["Xi (Valor)"].astype(float).values
                         fi = df_normal_xi["Fi (Frequência)"].astype(float).values
-                        
+
                         n = fi.sum()
                         media = np.sum(xi * fi) / n
                         variancia = np.sum(fi * (xi - media)**2) / (n - 1)
                         desvio = np.sqrt(variancia)
-                        
+
                         # Mediana
                         fac = np.cumsum(fi)
-                        idx_mediana = np.where(fac >= n/2)[0][0]
+                        idx_mediana = np.where(fac >= n / 2)[0][0]
                         mediana = xi[idx_mediana]
-                        
-                        # Moda
+
+                        # Moda (SEM AMODAL)
                         max_fi = fi.max()
-                        if len(set(fi)) == 1:
-                            moda = "∄ (Amodal)"
-                        else:
-                            modas = xi[fi == max_fi]
-                            moda = ", ".join([f"{m:.2f}" for m in modas[:3]])
-                        
+                        modas = xi[fi == max_fi]
+                        moda = ", ".join([f"{m:.2f}" for m in modas])
+
                         st.session_state.resultados_calculados['normal_calculado'] = {
-                            'media': media, 'desvio': desvio, 'n': int(n),
-                            'mediana': mediana, 'moda': moda
+                            'media': media,
+                            'desvio': desvio,
+                            'n': int(n),
+                            'mediana': mediana,
+                            'moda': moda
                         }
 
             else:  # Dados em Classes
