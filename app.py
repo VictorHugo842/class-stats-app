@@ -333,7 +333,7 @@ if modulo == "Estatística Descritiva":
                 font=dict(size=12), showlegend=False,
                 xaxis=dict(showgrid=True, gridwidth=1, gridcolor='lightgray'),
                 yaxis=dict(showgrid=True, gridwidth=1, gridcolor='lightgray'))
-            st.plotly_chart(fig_hist, use_container_width=True)
+            st.plotly_chart(fig_hist, width="stretch")
 
         with tab2:
             fig_poly = go.Figure()
@@ -350,7 +350,7 @@ if modulo == "Estatística Descritiva":
                 font=dict(size=12), showlegend=False,
                 xaxis=dict(showgrid=True, gridwidth=1, gridcolor='lightgray'),
                 yaxis=dict(showgrid=True, gridwidth=1, gridcolor='lightgray'))
-            st.plotly_chart(fig_poly, use_container_width=True)
+            st.plotly_chart(fig_poly, width="stretch")
 
 # ===============================================
 # MÓDULO 2: DISTRIBUIÇÕES DE PROBABILIDADE
@@ -401,18 +401,25 @@ elif modulo == "Distribuições de Probabilidade":
                     col2.metric("Variância", f"{variancia_unif:.4f}")
                     col3.metric("Desvio Padrão", f"{desvio_unif:.4f}")
 
-                    # Cálculo de probabilidade
-                    st.markdown("#### Calcular Probabilidade P(X ≤ x)")
+                    # ======= Probabilidades =======
+                    st.markdown("#### Calcular Probabilidade")
+
                     x_unif = st.number_input("Valor de x:", value=5.0, format="%.4f", key="x_unif")
 
-                    if x_unif < a_unif:
-                        prob = 0
-                    elif x_unif > b_unif:
-                        prob = 1
+                    # P(X ≤ x)
+                    if x_unif <= a_unif:
+                        prob_menor = 0.0
+                    elif x_unif >= b_unif:
+                        prob_menor = 1.0
                     else:
-                        prob = (x_unif - a_unif) / (b_unif - a_unif)
+                        prob_menor = (x_unif - a_unif) / (b_unif - a_unif)
 
-                    st.metric("P(X ≤ x)", f"{prob:.4f} = {prob * 100:.2f}%")
+                    # P(X ≥ x) = 1 - P(X ≤ x)
+                    prob_maior = 1 - prob_menor
+
+                    col1, col2 = st.columns(2)
+                    col1.metric("P(X > x)", f"{prob_menor:.4f} = {prob_menor * 100:.2f}%")
+                    col2.metric("P(X < x)", f"{prob_maior:.4f} = {prob_maior * 100:.2f}%")
 
                     # Gráfico
                     x_range = np.linspace(a_unif - 2, b_unif + 2, 1000)
@@ -426,7 +433,7 @@ elif modulo == "Distribuições de Probabilidade":
                     fig.update_layout(title="Função Densidade de Probabilidade",
                                       xaxis_title="x", yaxis_title="f(x)",
                                       showlegend=True)
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(fig, width="stretch")
 
         # ============ DISTRIBUIÇÃO EXPONENCIAL ============
         elif dist_continua == "Distribuição Exponencial":
@@ -454,13 +461,20 @@ elif modulo == "Distribuições de Probabilidade":
                     col2.metric("Variância", f"{variancia_exp:.4f}")
                     col3.metric("Desvio Padrão", f"{desvio_exp:.4f}")
 
-                    # Cálculo de probabilidade
-                    st.markdown("#### Calcular Probabilidade P(X ≤ x)")
+                    # Calcular probabilidade P(X < x) e P(X > x)
+                    st.markdown("#### Calcular Probabilidades")
+
                     x_exp = st.number_input("Valor de x:", value=2.0, min_value=0.0, format="%.4f", key="x_exp")
 
-                    prob_exp = 1 - np.exp(-lambda_exp * x_exp)
-                    st.metric("P(X ≤ x)", f"{prob_exp:.4f} = {prob_exp * 100:.2f}%")
+                    # P(X < x)
+                    prob_menor = 1 - np.exp(-lambda_exp * x_exp)
+                    # P(X > x)
+                    prob_maior = 1 - prob_menor  # ou np.exp(-lambda_exp * x_exp)
 
+                    col1, col2 = st.columns(2)
+                    col1.metric("P(X < x)", f"{prob_menor:.4f} = {prob_menor*100:.2f}%")
+                    col2.metric("P(X > x)", f"{prob_maior:.4f} = {prob_maior*100:.2f}%")
+                    
                     # Gráfico
                     x_range = np.linspace(0, 5 / lambda_exp, 1000)
                     y_range = lambda_exp * np.exp(-lambda_exp * x_range)
@@ -472,7 +486,7 @@ elif modulo == "Distribuições de Probabilidade":
                     fig.update_layout(title="Função Densidade de Probabilidade",
                                       xaxis_title="x", yaxis_title="f(x)",
                                       showlegend=True)
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(fig, width="stretch")
 
         # ============ DISTRIBUIÇÃO NORMAL PADRONIZADA ============
         elif dist_continua == "Distribuição Normal (Padronizada Z)":
@@ -480,20 +494,20 @@ elif modulo == "Distribuições de Probabilidade":
             st.markdown("Para uma variável aleatória Z ~ N(0, 1)")
 
             tipo_calc = st.radio("Tipo de cálculo:",
-                                 ["P(Z ≤ z)", "P(Z ≥ z)", "P(z1 ≤ Z ≤ z2)"],
+                                 ["P(Z < z)", "P(Z > z)", "P(z1 < Z < z2)"],
                                  horizontal=True)
 
-            if tipo_calc == "P(Z ≤ z)":
+            if tipo_calc == "P(Z < z)":
                 z_val = st.number_input("Valor de z:", value=1.96, format="%.4f")
                 if st.button("Calcular Normal"):
                     prob = stats.norm.cdf(z_val)
-                    st.metric("P(Z ≤ z)", f"{prob:.4f} = {prob * 100:.2f}%")
+                    st.metric("P(Z < z)", f"{prob:.4f} = {prob * 100:.2f}%")
 
-            elif tipo_calc == "P(Z ≥ z)":
+            elif tipo_calc == "P(Z > z)":
                 z_val = st.number_input("Valor de z:", value=1.96, format="%.4f")
                 if st.button("Calcular Normal"):
                     prob = 1 - stats.norm.cdf(z_val)
-                    st.metric("P(Z ≥ z)", f"{prob:.4f} = {prob * 100:.2f}%")
+                    st.metric("P(Z > z)", f"{prob:.4f} = {prob * 100:.2f}%")
 
             else:  # P(z1 ≤ Z ≤ z2)
                 col1, col2 = st.columns(2)
@@ -504,7 +518,7 @@ elif modulo == "Distribuições de Probabilidade":
 
                 if st.button("Calcular Normal"):
                     prob = stats.norm.cdf(z2) - stats.norm.cdf(z1)
-                    st.metric("P(z1 ≤ Z ≤ z2)", f"{prob:.4f} = {prob * 100:.2f}%")
+                    st.metric("P(z1 < Z < z2)", f"{prob:.4f} = {prob * 100:.2f}%")
 
             # Gráfico da distribuição normal
             st.markdown("#### Visualização")
@@ -518,7 +532,7 @@ elif modulo == "Distribuições de Probabilidade":
             fig.update_layout(title="Distribuição Normal Padronizada",
                               xaxis_title="z", yaxis_title="φ(z)",
                               showlegend=True)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
 
         # ============ DISTRIBUIÇÃO NORMAL ============
         elif dist_continua == "Distribuição Normal":
@@ -745,15 +759,15 @@ elif modulo == "Distribuições de Probabilidade":
                 st.markdown(f"X ~ N({dados['media']:.2f}, {dados['desvio']:.2f}²)")
                 
                 tipo_prob_norm = st.radio("Tipo de cálculo:",
-                                         ["P(X ≤ x)", "P(X ≥ x)", "P(x1 ≤ X ≤ x2)"],
+                                         ["P(X < x)", "P(X > x)", "P(x1 < X < x2)"],
                                          horizontal=True, key="tipo_prob_norm")
                 
-                if tipo_prob_norm in ["P(X ≤ x)", "P(X ≥ x)"]:
+                if tipo_prob_norm in ["P(X < x)", "P(X > x)"]:
                     x_val = st.number_input("Valor de x:", value=float(dados['media']), format="%.4f", key="x_norm")
                     
                     z = (x_val - dados['media']) / dados['desvio']
                     
-                    if tipo_prob_norm == "P(X ≤ x)":
+                    if tipo_prob_norm == "P(X < x)":
                         prob = stats.norm.cdf(z)
                     else:
                         prob = 1 - stats.norm.cdf(z)
@@ -773,7 +787,7 @@ elif modulo == "Distribuições de Probabilidade":
                     
                     prob = stats.norm.cdf(z2) - stats.norm.cdf(z1)
                     
-                    st.metric("P(x1 ≤ X ≤ x2)", f"{prob:.4f} = {prob*100:.2f}%")
+                    st.metric("P(x1 < X < x2)", f"{prob:.4f} = {prob*100:.2f}%")
                     st.info(f"Valores Z: z1 = {z1:.4f}, z2 = {z2:.4f}")
                 
                 # Gráfico
@@ -789,7 +803,7 @@ elif modulo == "Distribuições de Probabilidade":
                 fig.update_layout(title="Distribuição Normal",
                                  xaxis_title="x", yaxis_title="f(x)",
                                  showlegend=True)
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width="stretch")
                 
     else:  # VARIÁVEIS DISCRETAS
         dist_discreta = st.selectbox("Escolha a distribuição:",
@@ -805,7 +819,7 @@ elif modulo == "Distribuições de Probabilidade":
                 n_binom = st.number_input("Número de tentativas (n):", value=10, min_value=1, step=1)
             with col2:
                 p_binom = st.number_input("Probabilidade de sucesso (p):", value=0.5,
-                                          min_value=0.0, max_value=1.0, format="%.4f")
+                                        min_value=0.0, max_value=1.0, format="%.4f")
 
             calcular_binom = st.button("Calcular Binomial", key="btn_binom")
 
@@ -813,47 +827,60 @@ elif modulo == "Distribuições de Probabilidade":
                 st.session_state.resultados_calculados['binom_calculado'] = {'n': n_binom, 'p': p_binom}
 
             if 'binom_calculado' in st.session_state.resultados_calculados:
-                    dados = st.session_state.resultados_calculados['binom_calculado']
-                    n_binom = dados['n']
-                    p_binom = dados['p']
+                dados = st.session_state.resultados_calculados['binom_calculado']
+                n_binom = dados['n']
+                p_binom = dados['p']
 
-                    # Cálculos
-                    media_binom = n_binom * p_binom
-                    variancia_binom = n_binom * p_binom * (1 - p_binom)
-                    desvio_binom = np.sqrt(variancia_binom)
+                # Cálculos
+                media_binom = n_binom * p_binom
+                variancia_binom = n_binom * p_binom * (1 - p_binom)
+                desvio_binom = np.sqrt(variancia_binom)
 
-                    st.markdown("### Resultados")
-                    col1, col2, col3 = st.columns(3)
-                    col1.metric("Média", f"{media_binom:.4f}")
-                    col2.metric("Variância", f"{variancia_binom:.4f}")
-                    col3.metric("Desvio Padrão", f"{desvio_binom:.4f}")
+                st.markdown("### Resultados")
+                col1, col2, col3 = st.columns(3)
+                col1.metric("Média", f"{media_binom:.4f}")
+                col2.metric("Variância", f"{variancia_binom:.4f}")
+                col3.metric("Desvio Padrão", f"{desvio_binom:.4f}")
 
-                    # Cálculo de probabilidade específica
-                    st.markdown("#### Calcular Probabilidades")
-                    tipo_prob = st.radio("Tipo:", ["P(X = k)", "P(X ≤ k)", "P(X ≥ k)"], horizontal=True)
-                    k_binom = st.number_input("Valor de k:", value=5, min_value=0, max_value=n_binom, step=1)
+                # Probabilidade específica
+                st.markdown("#### Calcular Probabilidades")
+                tipo_prob = st.radio(
+                    "Tipo:",
+                    ["P(X = k)", "P(X < k)", "P(X ≤ k)", "P(X > k)", "P(X ≥ k)"],
+                    horizontal=True
+                )
+                k_binom = st.number_input("Valor de k:", value=5, min_value=0, max_value=n_binom, step=1)
 
-                    if tipo_prob == "P(X = k)":
-                        prob = stats.binom.pmf(k_binom, n_binom, p_binom)
-                    elif tipo_prob == "P(X ≤ k)":
-                        prob = stats.binom.cdf(k_binom, n_binom, p_binom)
-                    else:  # P(X ≥ k)
-                        prob = 1 - stats.binom.cdf(k_binom - 1, n_binom, p_binom)
+                # Cálculo correto
+                if tipo_prob == "P(X = k)":
+                    prob = stats.binom.pmf(k_binom, n_binom, p_binom)
 
-                    st.metric(tipo_prob, f"{prob:.4f} = {prob * 100:.2f}%")
+                elif tipo_prob == "P(X < k)":
+                    prob = stats.binom.cdf(k_binom - 1, n_binom, p_binom)
 
-                    # Gráfico
-                    x_range = np.arange(0, n_binom + 1)
-                    y_range = stats.binom.pmf(x_range, n_binom, p_binom)
+                elif tipo_prob == "P(X ≤ k)":
+                    prob = stats.binom.cdf(k_binom, n_binom, p_binom)
 
-                    fig = go.Figure()
-                    fig.add_trace(go.Bar(x=x_range, y=y_range,
-                                         marker_color='#667eea',
-                                         name='P(X=k)'))
-                    fig.update_layout(title="Função Massa de Probabilidade",
-                                      xaxis_title="k", yaxis_title="P(X=k)",
-                                      showlegend=True)
-                    st.plotly_chart(fig, use_container_width=True)
+                elif tipo_prob == "P(X > k)":
+                    prob = 1 - stats.binom.cdf(k_binom, n_binom, p_binom)
+
+                elif tipo_prob == "P(X ≥ k)":
+                    prob = 1 - stats.binom.cdf(k_binom - 1, n_binom, p_binom)
+
+                st.metric(tipo_prob, f"{prob:.4f} = {prob * 100:.2f}%")
+
+                # Gráfico
+                x_range = np.arange(0, n_binom + 1)
+                y_range = stats.binom.pmf(x_range, n_binom, p_binom)
+
+                fig = go.Figure()
+                fig.add_trace(go.Bar(x=x_range, y=y_range,
+                                    marker_color='#667eea',
+                                    name='P(X=k)'))
+                fig.update_layout(title="Função Massa de Probabilidade",
+                                xaxis_title="k", yaxis_title="P(X=k)",
+                                showlegend=True)
+                st.plotly_chart(fig, width="stretch")
 
         # ============ DISTRIBUIÇÃO POISSON ============
         elif dist_discreta == "Distribuição Poisson":
@@ -868,46 +895,60 @@ elif modulo == "Distribuições de Probabilidade":
                 st.session_state.resultados_calculados['pois_calculado'] = {'lambda': lambda_pois}
 
             if 'pois_calculado' in st.session_state.resultados_calculados:
-                    lambda_pois = st.session_state.resultados_calculados['pois_calculado']['lambda']
+                lambda_pois = st.session_state.resultados_calculados['pois_calculado']['lambda']
 
-                    # Cálculos
-                    media_pois = lambda_pois
-                    variancia_pois = lambda_pois
-                    desvio_pois = np.sqrt(variancia_pois)
+                # Cálculos
+                media_pois = lambda_pois
+                variancia_pois = lambda_pois
+                desvio_pois = np.sqrt(variancia_pois)
 
-                    st.markdown("### Resultados")
-                    col1, col2, col3 = st.columns(3)
-                    col1.metric("Média", f"{media_pois:.4f}")
-                    col2.metric("Variância", f"{variancia_pois:.4f}")
-                    col3.metric("Desvio Padrão", f"{desvio_pois:.4f}")
+                st.markdown("### Resultados")
+                col1, col2, col3 = st.columns(3)
+                col1.metric("Média", f"{media_pois:.4f}")
+                col2.metric("Variância", f"{variancia_pois:.4f}")
+                col3.metric("Desvio Padrão", f"{desvio_pois:.4f}")
 
-                    # Cálculo de probabilidade específica
-                    st.markdown("#### Calcular Probabilidades")
-                    tipo_prob = st.radio("Tipo:", ["P(X = k)", "P(X ≤ k)", "P(X ≥ k)"], horizontal=True,
-                                         key="tipo_pois")
-                    k_pois = st.number_input("Valor de k:", value=3, min_value=0, step=1, key="k_pois")
+                # Probabilidade específica
+                st.markdown("#### Calcular Probabilidades")
+                tipo_prob = st.radio(
+                    "Tipo:",
+                    ["P(X = k)", "P(X < k)", "P(X ≤ k)", "P(X > k)", "P(X ≥ k)"],
+                    horizontal=True,
+                    key="tipo_pois"
+                )
+                k_pois = st.number_input("Valor de k:", value=3, min_value=0, step=1, key="k_pois")
 
-                    if tipo_prob == "P(X = k)":
-                        prob = stats.poisson.pmf(k_pois, lambda_pois)
-                    elif tipo_prob == "P(X ≤ k)":
-                        prob = stats.poisson.cdf(k_pois, lambda_pois)
-                    else:  # P(X ≥ k)
-                        prob = 1 - stats.poisson.cdf(k_pois - 1, lambda_pois)
+                # Cálculo correto
+                if tipo_prob == "P(X = k)":
+                    prob = stats.poisson.pmf(k_pois, lambda_pois)
 
-                    st.metric(tipo_prob, f"{prob:.4f} = {prob * 100:.2f}%")
+                elif tipo_prob == "P(X < k)":
+                    prob = stats.poisson.cdf(k_pois - 1, lambda_pois)
 
-                    # Gráfico
-                    x_range = np.arange(0, int(lambda_pois * 3) + 1)
-                    y_range = stats.poisson.pmf(x_range, lambda_pois)
+                elif tipo_prob == "P(X ≤ k)":
+                    prob = stats.poisson.cdf(k_pois, lambda_pois)
 
-                    fig = go.Figure()
-                    fig.add_trace(go.Bar(x=x_range, y=y_range,
-                                         marker_color='#764ba2',
-                                         name='P(X=k)'))
-                    fig.update_layout(title="Função Massa de Probabilidade",
-                                      xaxis_title="k", yaxis_title="P(X=k)",
-                                      showlegend=True)
-                    st.plotly_chart(fig, use_container_width=True)
+                elif tipo_prob == "P(X > k)":
+                    prob = 1 - stats.poisson.cdf(k_pois, lambda_pois)
+
+                elif tipo_prob == "P(X ≥ k)":
+                    prob = 1 - stats.poisson.cdf(k_pois - 1, lambda_pois)
+
+                st.metric(tipo_prob, f"{prob:.4f} = {prob * 100:.2f}%")
+
+                # Gráfico
+                x_range = np.arange(0, int(lambda_pois * 3) + 1)
+                y_range = stats.poisson.pmf(x_range, lambda_pois)
+
+                fig = go.Figure()
+                fig.add_trace(go.Bar(x=x_range, y=y_range,
+                                    marker_color='#764ba2',
+                                    name='P(X=k)'))
+                fig.update_layout(title="Função Massa de Probabilidade",
+                                xaxis_title="k", yaxis_title="P(X=k)",
+                                showlegend=True)
+                st.plotly_chart(fig, width="stretch")
+
 
 # ===============================================
 # MÓDULO 3: REGRESSÃO LINEAR
@@ -1027,7 +1068,7 @@ elif modulo == "Regressão Linear":
                 "Y Predito": Y_pred,
                 "Resíduo": residuos
             })
-            st.dataframe(df_resultados, use_container_width=True)
+            st.dataframe(df_resultados, width="stretch")
 
             # Gráficos
             st.markdown("### Visualizações")
@@ -1057,7 +1098,7 @@ elif modulo == "Regressão Linear":
                     xaxis_title="X", yaxis_title="Y",
                     showlegend=True, hovermode='closest'
                 )
-                st.plotly_chart(fig1, use_container_width=True)
+                st.plotly_chart(fig1, width="stretch")
 
             with tab2:
                 fig2 = go.Figure()
@@ -1077,7 +1118,7 @@ elif modulo == "Regressão Linear":
                     xaxis_title="Valores Preditos", yaxis_title="Resíduos",
                     showlegend=True
                 )
-                st.plotly_chart(fig2, use_container_width=True)
+                st.plotly_chart(fig2, width="stretch")
 
             with tab3:
                 # Q-Q Plot para normalidade dos resíduos
@@ -1105,7 +1146,7 @@ elif modulo == "Regressão Linear":
                     xaxis_title="Quantis Teóricos", yaxis_title="Quantis Amostrais",
                     showlegend=True
                 )
-                st.plotly_chart(fig3, use_container_width=True)
+                st.plotly_chart(fig3, width="stretch")
 
             # Domínio e Contradomínio
             st.markdown("### Domínio e Contradomínio")
