@@ -1,58 +1,90 @@
 # Analisador Estatístico com Classes
+Analisador Estatístico com Classes, uma aplicação interativa desenvolvida em Python utilizando Streamlit. Criado como trabalho da disciplina de Estatística do curso de Gestão da Tecnologia da Informação da FATEC Jundiaí, o sistema permite calcular e visualizar diversos conceitos estatísticos, incluindo dados agrupados em classes, distribuições de probabilidade, regressão e inferência estatística.
 
-Bem-vindo ao **Analisador Estatístico com Classes**, uma ferramenta interativa desenvolvida em Python usando a biblioteca Streamlit. Este projeto foi criado para o trabalho da disciplina de Estatística do curso de Gestão da Tecnologia da Informação da FATEC Jundiaí. Ele permite calcular e visualizar medidas estatísticas de dados agrupados em classes de forma simples e intuitiva.
+Acesse o aplicativo online:
+https://estatisticadescritiva.streamlit.app/
 
-**Acesse o aplicativo online:** [https://estatisticadescritiva.streamlit.app/](https://estatisticadescritiva.streamlit.app/)
+🔧 Recursos da Aplicação
 
-## Recursos
+O aplicativo reúne vários módulos estatísticos, incluindo:
 
-O aplicativo oferece funcionalidades para analisar dados agrupados, incluindo:
+📘 Estatística Descritiva com Classes
 
-- **Medidas de Tendência Central:** média, mediana e moda (bruta e pela fórmula de Czuber)
-- **Medidas de Dispersão:** variância, desvio padrão e coeficiente de variação
-- **Classificação da Distribuição:** identificação do tipo de moda (Unimodal, Bimodal ou Multimodal)
-- **Tabela de Classes Interativa:** limites das classes, frequências, pontos médios e cálculos auxiliares
-- **Visualizações Dinâmicas:** histograma e polígono de frequência interativos com Plotly
+Média, mediana e moda (bruta e pela fórmula de Czuber)
 
-## Funcionalidades Estatísticas
+Variância, desvio padrão e coeficiente de variação
 
-### Medidas de Tendência Central
+Classificação da distribuição (unimodal, bimodal ou multimodal)
 
-- **Média Aritmética:** soma dos produtos das frequências pelos pontos médios das classes
-- **Mediana:** valor que divide o conjunto de dados em duas partes iguais
-- **Moda Bruta:** ponto médio da classe com maior frequência
-- **Moda de Czuber:** estimativa mais precisa da moda usando interpolação
+Classificação da dispersão pelo coeficiente de variação
 
-### Medidas de Dispersão
+Tabela de classes com limites, pontos médios, frequências e cálculos auxiliares
 
-- **Variância:** grau de dispersão dos dados em relação à média
-- **Desvio Padrão:** afastamento médio dos valores em relação à média
-- **Coeficiente de Variação:** compara a dispersão relativa entre diferentes conjuntos de dados
+Visualizações: histograma e polígono de frequência com Plotly
 
-**Classificação da Dispersão:**
+📊 Funcionalidades Estatísticas Adicionais
+🔹 Distribuições de Probabilidade
 
-- CV < 15%: baixa dispersão (dados homogêneos)  
-- 15% ≤ CV < 30%: média dispersão  
-- CV ≥ 30%: alta dispersão (dados heterogêneos)
+Normal e Normal Padronizada (Z): probabilidades, áreas, valores críticos e curva interativa
 
-## Como Usar Localmente
+Binomial: probabilidades individuais e acumuladas
 
-1. Atualize as dependências com:  
-   `pip install -r requirements.txt`
+Poisson: cálculo de ocorrências raras
 
-2. Execute o aplicativo com:  
-   `streamlit run seu_arquivo.py`
+Exponencial: função densidade, P(X ≤ x), P(X ≥ x) e gráfico
 
-2. Rodar em venv:
-   `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
-    `.\venv\Scripts\Activate.ps1`
+📈 Regressão Linear e Correlação
 
-3. Abra o navegador, configure limite mínimo (L0), amplitude da classe (h) e número de classes (k), depois insira as frequências e clique em "Calcular Estatísticas".
+Cálculo dos coeficientes da reta
 
-## Integrantes do Grupo
+Gráfico de dispersão com linha de tendência
 
-Anderson Martinez, Isaac Pereira, Lucas Moraes, Fabiano Matheus e Victor Hugo
+Correlação de Pearson
 
-**Curso:** Gestão da Tecnologia da Informação  
-**Disciplina:** Estatística  
-**Professor:** João Carlos dos Santos
+Valor de R²
+
+📑 Inferência Estatística
+
+Intervalos de confiança para médias (Z e t) e proporções
+
+Testes de hipóteses para médias e proporções (unilateral e bilateral)
+
+🧮 Modos de Inserção de Dados
+
+Lista de valores
+
+Tabela Xi e Fi
+
+Dados agrupados em classes
+
+▶️ Como Usar Localmente
+
+Instale as dependências:
+
+pip install -r requirements.txt
+
+
+Execute o aplicativo:
+
+streamlit run seu_arquivo.py
+
+
+Para rodar em ambiente virtual (PowerShell):
+
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+.\venv\Scripts\Activate.ps1
+
+
+No navegador, configure L0 (limite mínimo), h (amplitude), k (número de classes), insira as frequências e clique em Calcular Estatísticas.
+
+👥 Integrantes do Grupo
+
+Anderson Martinez
+Isaac Pereira
+Lucas Moraes
+Fabiano Matheus
+Victor Hugo
+
+Curso: Gestão da Tecnologia da Informação
+Disciplina: Estatística
+Professor: João Carlos dos Santos
