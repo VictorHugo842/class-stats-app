@@ -1,90 +1,95 @@
-# Analisador Estatístico com Classes
-Analisador Estatístico com Classes, uma aplicação interativa desenvolvida em Python utilizando Streamlit. Criado como trabalho da disciplina de Estatística do curso de Gestão da Tecnologia da Informação da FATEC Jundiaí, o sistema permite calcular e visualizar diversos conceitos estatísticos, incluindo dados agrupados em classes, distribuições de probabilidade, regressão e inferência estatística.
+# 📊 Analisador Estatístico com Classes
 
-Acesse o aplicativo online:
+O **Analisador Estatístico com Classes** é uma aplicação interativa desenvolvida em Python utilizando **Streamlit**. Criado como trabalho da disciplina de **Estatística** da **FATEC Jundiaí**, o sistema calcula e visualiza diversos conceitos estatísticos, incluindo dados agrupados, distribuições de probabilidade, regressão linear e módulos de inferência estatística.
+
+🌐 **Acesse o aplicativo online:**  
 https://estatisticadescritiva.streamlit.app/
 
-🔧 Recursos da Aplicação
+---
 
-O aplicativo reúne vários módulos estatísticos, incluindo:
+## 🔧 Recursos da Aplicação
 
-📘 Estatística Descritiva com Classes
+A ferramenta é dividida em módulos que facilitam o estudo e o cálculo estatístico.
 
-Média, mediana e moda (bruta e pela fórmula de Czuber)
+---
 
-Variância, desvio padrão e coeficiente de variação
+## 📘 Estatística Descritiva com Dados Agrupados
 
-Classificação da distribuição (unimodal, bimodal ou multimodal)
+- Média, mediana e moda (bruta e pela fórmula de Czuber)  
+- Variância, desvio padrão e coeficiente de variação  
+- Classificação da distribuição:
+  - Unimodal  
+  - Bimodal  
+  - Multimodal  
+- Classificação da dispersão (coeficiente de variação)  
+- Tabela dinâmica com:
+  - Limites  
+  - Amplitude  
+  - Pontos médios  
+  - Frequências (fi)  
+  - Cálculos auxiliares  
+- Visualizações:
+  - 📊 Histograma  
+  - 📈 Polígono de frequência (Plotly)
 
-Classificação da dispersão pelo coeficiente de variação
+---
 
-Tabela de classes com limites, pontos médios, frequências e cálculos auxiliares
+## 📊 Distribuições de Probabilidade
 
-Visualizações: histograma e polígono de frequência com Plotly
+### 🔹 Normal e Normal Padronizada (Z)
+- Cálculo de probabilidades  
+- Áreas e valores críticos  
+- Curva interativa
 
-📊 Funcionalidades Estatísticas Adicionais
-🔹 Distribuições de Probabilidade
+### 🔹 Binomial
+- Probabilidades individuais  
+- Probabilidades acumuladas  
 
-Normal e Normal Padronizada (Z): probabilidades, áreas, valores críticos e curva interativa
+### 🔹 Poisson
+- Cálculo de ocorrências raras  
 
-Binomial: probabilidades individuais e acumuladas
+### 🔹 Exponencial
+- Função densidade  
+- Probabilidades:
+  - P(X ≤ x)  
+  - P(X ≥ x)  
+- Gráfico interativo  
 
-Poisson: cálculo de ocorrências raras
+---
 
-Exponencial: função densidade, P(X ≤ x), P(X ≥ x) e gráfico
+## 📈 Regressão Linear e Correlação
 
-📈 Regressão Linear e Correlação
+- Coeficientes da reta (a e b)  
+- Gráfico de dispersão com linha de tendência  
+- Correlação de Pearson (r)  
+- Coeficiente de determinação (R²)  
 
-Cálculo dos coeficientes da reta
+---
 
-Gráfico de dispersão com linha de tendência
+## 📑 Inferência Estatística
 
-Correlação de Pearson
+- Intervalos de confiança:
+  - Para médias (Z e t)  
+  - Para proporções  
+- Testes de hipótese:
+  - Unilaterais  
+  - Bilaterais  
+  - Para média (Z e t)  
+  - Para proporções  
 
-Valor de R²
+---
 
-📑 Inferência Estatística
+## 🧮 Modos de Inserção de Dados
 
-Intervalos de confiança para médias (Z e t) e proporções
+- Lista de valores  
+- Tabela Xi e Fi  
+- Dados agrupados  
 
-Testes de hipóteses para médias e proporções (unilateral e bilateral)
+---
 
-🧮 Modos de Inserção de Dados
+## ▶️ Como Usar Localmente
 
-Lista de valores
-
-Tabela Xi e Fi
-
-Dados agrupados em classes
-
-▶️ Como Usar Localmente
-
-Instale as dependências:
-
+### 📦 Instale as dependências
+```bash
 pip install -r requirements.txt
-
-
-Execute o aplicativo:
-
-streamlit run seu_arquivo.py
-
-
-Para rodar em ambiente virtual (PowerShell):
-
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-.\venv\Scripts\Activate.ps1
-
-
-No navegador, configure L0 (limite mínimo), h (amplitude), k (número de classes), insira as frequências e clique em Calcular Estatísticas.
-
-👥 Integrantes do Grupo
-
-Anderson Martinez
-Isaac Pereira
-Lucas Moraes
-Fabiano Matheus
-Victor Hugo
-
-Curso: Gestão da Tecnologia da Informação
-Disciplina: Estatística
-Professor: João Carlos dos Santos
+streamlit run app.py
